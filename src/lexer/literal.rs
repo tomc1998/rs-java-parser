@@ -1,3 +1,4 @@
+use regex::{Regex, RegexBuilder};
 use lexer::CharStream;
 use lexer::token::{Token, TokenType};
 
@@ -5,6 +6,7 @@ use lexer::token::{Token, TokenType};
 /// is malformed - this error will be a string message.
 pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static str> {
     let input_str = input.as_str();
+    let re_digit = Regex::new("^\\d").unwrap();
     if &input_str[..1] == "\"" {
         input.next();
         // Find the matching close "
@@ -31,6 +33,16 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static
         Ok(Some(Token {
             token_type: TokenType::Literal,
             val: &input_str[..ix],
+        }))
+    } else if re_digit.is_match(input_str) {
+        let re_number_literal = RegexBuilder::new(r"^(0x|0b)?[0-9a-f]+\.?\d*(l|f|d)?")
+            .case_insensitive(true)
+            .build().unwrap();
+        let literal_match = re_number_literal.find(input_str).unwrap();
+        input.nth(literal_match.end());
+        Ok(Some(Token {
+            token_type: TokenType::Literal,
+            val: &input_str[..literal_match.end()],
         }))
     } else {
         Ok(None)
@@ -66,5 +78,25 @@ mod tests {
         let mut test_str = "ident.callFunc()".chars();
         let tok_0 = lex(&mut test_str).unwrap();
         assert!(tok_0.is_none());
+    }
+
+    #[test]
+    fn it_should_lex_all_number_literals() {
+        let test_strs = [
+            ("1 + 2", "1"),
+            ("4.0 + 4", "4.0"),
+            ("4.0.0", "4.0"),
+            ("40l + 50l", "40l"),
+            ("0.0f + 50l", "0.0f"),
+            ("0.f + 50l", "0.f"),
+            ("0.F + 50.f", "0.F"),
+            ("0b00001101 + 1", "0b00001101"),
+        ];
+        for &(s, tok_val) in test_strs.iter() {
+            let mut chars = s.chars();
+            let _tok = lex(&mut chars).unwrap().expect(&("Failed to lex: ".to_owned() + s));
+            assert_eq!(tok_val, _tok.val);
+            assert_eq!(chars.as_str(), &s[tok_val.len() + 1..]);
+        }
     }
 }

@@ -1,3 +1,4 @@
+use regex::Regex;
 use lexer::CharStream;
 use lexer::token::{Token, TokenType};
 
@@ -6,27 +7,29 @@ use lexer::token::{Token, TokenType};
 pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
     let input_str = input.as_str();
     let keyword_list = [
-        "import ",
-        "package ",
-        "class ",
-        "if ",
-        "while ",
-        "for ",
-        "public ",
-        "private ",
-        "static ",
-        "final ",
-        "synchronized ",
-        "native ",
-        "strictfp ",
+        Regex::new(r"^import\b").unwrap(),
+        Regex::new(r"^package\b").unwrap(),
+        Regex::new(r"^class\b").unwrap(),
+        Regex::new(r"^if\b").unwrap(),
+        Regex::new(r"^while\b").unwrap(),
+        Regex::new(r"^for\b").unwrap(),
+        Regex::new(r"^public\b").unwrap(),
+        Regex::new(r"^private\b").unwrap(),
+        Regex::new(r"^static\b").unwrap(),
+        Regex::new(r"^final\b").unwrap(),
+        Regex::new(r"^synchronized\b").unwrap(),
+        Regex::new(r"^native\b").unwrap(),
+        Regex::new(r"^strictfp\b").unwrap(),
     ];
     for key in keyword_list.iter() {
-        if input_str.starts_with(key) {
+        let key_match = key.find(input_str);
+        if key_match.is_some() {
+            let key_match = key_match.unwrap();
             let tok = Some(Token {
                 token_type: TokenType::Key,
-                val: input_str[0..key.len() - 1].trim(),
+                val: input_str[0..key_match.end()].trim(),
             });
-            input.nth(key.len() - 1);
+            input.nth(key_match.end());
             return tok;
         }
     }
