@@ -19,7 +19,7 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
             })
         } else {
             let res = res.unwrap().start();
-            input.nth(res - 1); // Consume iter up to the end of the ident
+            input.nth(res-1); // Consume iter up to the end of the ident
             Some(Token {
                 token_type: TokenType::Ident,
                 val: &input_str[0..res],
@@ -36,18 +36,13 @@ mod tests {
 
     #[test]
     fn it_lexes_valid_identifiers() {
-        let mut test_str_0 = "myVar.callFunc();".chars();
-        let mut test_str_1 = "myVar = \"hello\";".chars();
-        let mut test_str_2 = "com.tom.MyClass".chars();
-        let tok_0 = lex(&mut test_str_0).expect("Identifier not lexed");
-        let tok_1 = lex(&mut test_str_1).expect("Identifier not lexed");
-        let tok_2 = lex(&mut test_str_2).expect("Identifier not lexed");
-        assert_eq!(tok_0.val, "myVar");
-        assert_eq!(tok_1.val, "myVar");
-        assert_eq!(tok_2.val, "com");
-        assert_eq!(test_str_0.as_str(), ".callFunc();");
-        assert_eq!(test_str_1.as_str(), " = \"hello\";");
-        assert_eq!(test_str_2.as_str(), ".tom.MyClass");
+        test_lexing!( 
+            ("var;", "var"),
+            ("myVar.callFunc();", "myVar"),
+            ("myVar = \"hello\";", "myVar"),
+            ("com.tom.MyClass", "com"),
+            ("com.tom.MyClass", "com")
+        );
     }
 
     #[test]

@@ -8,7 +8,24 @@ macro_rules! test_lexing {
                 let mut chars = $input.chars();
                 let _tok = lex(&mut chars).expect(&("Failed to lex: ".to_owned() + $input));
                 assert_eq!($expected, _tok.val);
-                assert_eq!(chars.as_str(), &$input[$expected.len() + 1..]);
+                assert_eq!(chars.as_str(), &$input[$expected.len()..]);
+            )*
+        }
+    }
+}
+
+/// Special version of the test_lexing macro. Performs a double unwrap() on the token returned from
+/// the lex() function. This is for lex() functions that return options inside results, like in
+/// literal.rs.
+#[macro_export]
+macro_rules! test_lexing_double_unwrap {
+    ( $(( $input:expr, $expected:expr )),* ) => {
+        {
+            $(
+                let mut chars = $input.chars();
+                let _tok = lex(&mut chars).unwrap().expect(&("Failed to lex: ".to_owned() + $input));
+                assert_eq!($expected, _tok.val);
+                assert_eq!(chars.as_str(), &$input[$expected.len()..]);
             )*
         }
     }
@@ -39,7 +56,9 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
     while input.as_str().len() > 0 {
         common::consume_whitespace(&mut input);
 
-        if input.as_str().len() <= 0 { break; }
+        if input.as_str().len() <= 0 {
+            break;
+        }
 
         let token = punctuation::lex(&mut input);
         if token.is_some() {

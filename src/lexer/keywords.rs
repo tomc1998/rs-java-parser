@@ -1,6 +1,5 @@
 use regex::Regex;
-use lexer::CharStream;
-use lexer::token::{Token, TokenType};
+use lexer::{CharStream, Token, TokenType};
 
 /// Try to lex a keyword from the given char stream. Returns None if not currently placed at a
 /// keyword. This will also lex modifiers like public / private.
@@ -25,11 +24,12 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
         let key_match = key.find(input_str);
         if key_match.is_some() {
             let key_match = key_match.unwrap();
+            let tok_str = input_str[0..key_match.end()].trim();
             let tok = Some(Token {
                 token_type: TokenType::Key,
-                val: input_str[0..key_match.end()].trim(),
+                val: tok_str,
             });
-            input.nth(key_match.end());
+            input.nth(tok_str.len()-1);
             return tok;
         }
     }
@@ -42,11 +42,12 @@ mod tests {
 
     #[test]
     fn it_lexes_java_keywords() {
-        let test_strs = [
+        test_lexing!(
             ("package com.tom.test", "package"),
             ("import com.tom.test.MyClass", "import"),
             ("class John", "class"),
             ("if (myBool)", "if"),
+            ("if(", "if"),
             ("while (true)", "while"),
             ("for (;;)", "for"),
             ("public void", "public"),
@@ -55,14 +56,8 @@ mod tests {
             ("final int", "final"),
             ("synchronized void", "synchronized"),
             ("native void", "native"),
-            ("strictfp void", "strictfp"),
-        ];
-        for &(s, tok_val) in test_strs.iter() {
-            let mut chars = s.chars();
-            let _tok = lex(&mut chars).expect(&("Failed to lex: ".to_owned() + s));
-            assert_eq!(tok_val, _tok.val);
-            assert_eq!(chars.as_str(), &s[tok_val.len() + 1..]);
-        }
+            ("strictfp void", "strictfp")
+            );
     }
 
     #[test]
