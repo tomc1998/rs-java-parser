@@ -6,7 +6,6 @@ use lexer::token::{Token, TokenType};
 /// is malformed - this error will be a string message.
 pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static str> {
     let input_str = input.as_str();
-    let re_digit = Regex::new("^\\d").unwrap();
 
     // A list of regex matching 'keyword' literals, like 'true' / 'false' / 'null'
     let keyword_literals = [

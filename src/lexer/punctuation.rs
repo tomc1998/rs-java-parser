@@ -5,12 +5,14 @@ use lexer::token::{Token, TokenType};
 /// Try to lex punctuation character from the given char stream.
 pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
     let input_str = input.as_str();
-    let re_punc = Regex::new(r"^[\.\(\)\[\]{};@]").unwrap();
-    if re_punc.is_match(input_str) {
-        input.next();
+    let re_punc = Regex::new(r"^(\.\.\.|::|[,\.\(\)\[\]{};@])").unwrap();
+    let punc_match = re_punc.find(input_str);
+    if punc_match.is_some() {
+        let punc_match = punc_match.unwrap();
+        input.nth(punc_match.end()-1);
         Some(Token {
             token_type: TokenType::Punc,
-            val: &input_str[0..1],
+            val: &input_str[..punc_match.end()],
         })
     } else {
         None
@@ -23,14 +25,20 @@ mod tests {
 
     #[test]
     fn it_lexes_valid_punctuation() {
-        let test_punc_chars_str = "{}[].;@";
-        let mut test_punc_chars = test_punc_chars_str.chars();
-        for _ in 0..test_punc_chars_str.len() {
-            let punc_str = &test_punc_chars.as_str()[0..1];
-            let tok = lex(&mut test_punc_chars);
-            assert_eq!(tok.unwrap().val, punc_str);
-        }
-        assert_eq!(test_punc_chars.as_str(), "");
+        test_lexing!( 
+            ("{asd", "{"),
+            ("}asd", "}"),
+            ("(asd", "("),
+            (")asd", ")"),
+            ("[asd", "["),
+            ("]asd", "]"),
+            (",asd", ","),
+            (".asd", "."),
+            (";asd", ";"),
+            ("@asd", "@"),
+            ("::asd", "::"),
+            ("...asd", "...")
+        );
     }
 
     #[test]
