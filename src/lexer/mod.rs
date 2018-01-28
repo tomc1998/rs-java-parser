@@ -61,16 +61,6 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
             break;
         }
 
-        let token = punctuation::lex(&mut input);
-        if token.is_some() {
-            token_list.push(token.unwrap());
-            continue;
-        }
-        let token = operators::lex(&mut input);
-        if token.is_some() {
-            token_list.push(token.unwrap());
-            continue;
-        }
         let token = literals::lex(&mut input);
         if token.is_err() {
             panic!("{}", token.err().unwrap());
@@ -80,14 +70,22 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
             token_list.push(token.unwrap());
             continue;
         }
-
         let token = keywords::lex(&mut input);
         if token.is_some() {
             token_list.push(token.unwrap());
             continue;
         }
-
         let token = identifiers::lex(&mut input);
+        if token.is_some() {
+            token_list.push(token.unwrap());
+            continue;
+        }
+        let token = punctuation::lex(&mut input);
+        if token.is_some() {
+            token_list.push(token.unwrap());
+            continue;
+        }
+        let token = operators::lex(&mut input);
         if token.is_some() {
             token_list.push(token.unwrap());
             continue;
@@ -111,10 +109,10 @@ mod test {
         public class Main {
             public static void main(String[] args) {
                 float a = 3.f;
-                float b = 4.123f;
+                float b = .2f;
                 float c = a + b;
                 System.out.println("Hello, world!");
-                System.out.println("3 + 4.123 = " + c);
+                System.out.println("3 + 0.2 = " + c);
             }
         }
         "#;

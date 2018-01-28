@@ -84,7 +84,7 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static
             val: &input_str[..ix],
         }))
     } else if re_digit.is_match(input_str) {
-        let re_number_literal = RegexBuilder::new(r"^(0x|0b)?[0-9a-f]+\.?\d*(l|f|d)?")
+        let re_number_literal = RegexBuilder::new(r"^(0x|0b)?[0-9a-f]+\.?[0-9a-f]*(l|f|d)?")
             .case_insensitive(true)
             .build().unwrap();
         let literal_match = re_number_literal.find(input_str).unwrap();
@@ -93,6 +93,23 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static
             token_type: TokenType::Literal,
             val: &input_str[..literal_match.end()],
         }))
+    } else if input_str.chars().next() == Some('.') {
+        // Special case of number literal where . is the first cahr, like .2f
+        let re_number_literal = RegexBuilder::new(r"^(0x)?\.[0-9a-f]+(f|d)?")
+            .case_insensitive(true)
+            .build().unwrap();
+        let literal_match = re_number_literal.find(input_str);
+        if literal_match.is_none() {
+            Ok(None)
+        }
+        else {
+            let literal_match = literal_match.unwrap();
+            input.nth(literal_match.end()-1);
+            Ok(Some(Token {
+                token_type: TokenType::Literal,
+                val: &input_str[..literal_match.end()],
+            }))
+        }
     } else {
         Ok(None)
     }
@@ -133,6 +150,7 @@ mod tests {
     fn it_should_lex_all_number_literals() {
         test_lexing_double_unwrap!( 
             ("1 + 2", "1"),
+            (".2f asd", ".2f"),
             ("4.0 + 4", "4.0"),
             ("4.0.0", "4.0"),
             ("40l + 50l", "40l"),
