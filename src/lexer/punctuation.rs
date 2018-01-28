@@ -2,7 +2,7 @@ use regex::Regex;
 use lexer::CharStream;
 use lexer::token::{Token, TokenType};
 
-/// Try to lex punctuation character from the given char stream. 
+/// Try to lex punctuation character from the given char stream.
 pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
     let input_str = input.as_str();
     let re_punc = Regex::new(r"^[\.\(\)\[\]{};]").unwrap();
@@ -12,8 +12,7 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
             token_type: TokenType::Punc,
             val: &input_str[0..1],
         })
-    }
-    else {
+    } else {
         None
     }
 }
@@ -50,4 +49,3 @@ mod tests {
         assert_eq!(test_str_2.as_str(), "myObj.callFunc()");
     }
 }
-

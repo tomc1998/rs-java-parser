@@ -15,19 +15,17 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
             input.count(); // Consume the whole iter
             Some(Token {
                 token_type: TokenType::Ident,
-                val: input_str
+                val: input_str,
             })
-        }
-        else {
+        } else {
             let res = res.unwrap().start();
-            input.nth(res-1); // Consume iter up to the end of the ident
+            input.nth(res - 1); // Consume iter up to the end of the ident
             Some(Token {
                 token_type: TokenType::Ident,
                 val: &input_str[0..res],
             })
         }
-    }
-    else {
+    } else {
         None
     }
 }

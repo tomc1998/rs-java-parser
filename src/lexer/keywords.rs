@@ -6,15 +6,27 @@ use lexer::token::{Token, TokenType};
 pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
     let input_str = input.as_str();
     let keyword_list = [
-        "import ", "package "
+        "import ",
+        "package ",
+        "class ",
+        "if ",
+        "while ",
+        "for ",
+        "public ",
+        "private ",
+        "static ",
+        "final ",
+        "synchronized ",
+        "native ",
+        "strictfp ",
     ];
     for key in keyword_list.iter() {
         if input_str.starts_with(key) {
             let tok = Some(Token {
                 token_type: TokenType::Key,
-                val: input_str[0..key.len()-1].trim(),
+                val: input_str[0..key.len() - 1].trim(),
             });
-            input.nth(key.len()-1);
+            input.nth(key.len() - 1);
             return tok;
         }
     }
@@ -27,14 +39,27 @@ mod tests {
 
     #[test]
     fn it_lexes_java_keywords() {
-        let mut test_str_0 = "package com.tom.test".chars();
-        let mut test_str_1 = "import com.tom.test.MyClass".chars();
-        let tok_0 = lex(&mut test_str_0).expect("package declaration not lexed");
-        let tok_1 = lex(&mut test_str_1).expect("import declaration not lexed");
-        assert_eq!(tok_0.val, "package");
-        assert_eq!(tok_1.val, "import");
-        assert_eq!(test_str_0.as_str(), "com.tom.test");
-        assert_eq!(test_str_1.as_str(), "com.tom.test.MyClass");
+        let mut test_strs = [
+            ("package com.tom.test", "package"),
+            ("import com.tom.test.MyClass", "import"),
+            ("class John", "class"),
+            ("if (myBool)", "if"),
+            ("while (true)", "while"),
+            ("for (;;)", "for"),
+            ("public void", "public"),
+            ("private int", "private"),
+            ("static int", "static"),
+            ("final int", "final"),
+            ("synchronized void", "synchronized"),
+            ("native void", "native"),
+            ("strictfp void", "strictfp"),
+        ];
+        for &(s, tok_val) in test_strs.iter() {
+            let mut chars = s.chars();
+            let _tok = lex(&mut chars).expect(&("Failed to lex: ".to_owned() + s));
+            assert_eq!(tok_val, _tok.val);
+            assert_eq!(chars.as_str(), &s[tok_val.len() + 1..]);
+        }
     }
 
     #[test]
