@@ -4,6 +4,7 @@ pub enum TokenType {
     Punc,
     Ident,
     Literal,
+    Operator,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]

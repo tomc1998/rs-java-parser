@@ -35,7 +35,8 @@ mod token;
 mod keywords;
 mod identifiers;
 mod punctuation;
-mod literal;
+mod operators;
+mod literals;
 mod common;
 
 pub use self::token::{Token, TokenType};
@@ -65,7 +66,12 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
             token_list.push(token.unwrap());
             continue;
         }
-        let token = literal::lex(&mut input);
+        let token = operators::lex(&mut input);
+        if token.is_some() {
+            token_list.push(token.unwrap());
+            continue;
+        }
+        let token = literals::lex(&mut input);
         if token.is_err() {
             panic!("{}", token.err().unwrap());
         }
@@ -104,7 +110,11 @@ mod test {
 
         public class Main {
             public static void main(String[] args) {
+                float a = 3.f;
+                float b = 4.123f;
+                float c = a + b;
                 System.out.println("Hello, world!");
+                System.out.println("3 + 4.123 = " + c);
             }
         }
         "#;
