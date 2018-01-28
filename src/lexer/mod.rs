@@ -1,3 +1,19 @@
+/// Given a list of tuples where the first element is the input and the 2nd element is the expected
+/// lexer token output, check that lex(input) produces this correctly.
+#[macro_export]
+macro_rules! test_lexing {
+    ( $(( $input:expr, $expected:expr )),* ) => {
+        {
+            $(
+                let mut chars = $input.chars();
+                let _tok = lex(&mut chars).expect(&("Failed to lex: ".to_owned() + $input));
+                assert_eq!($expected, _tok.val);
+                assert_eq!(chars.as_str(), &$input[$expected.len() + 1..]);
+            )*
+        }
+    }
+}
+
 mod token;
 mod keywords;
 mod identifiers;
