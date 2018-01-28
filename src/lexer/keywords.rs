@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn it_lexes_java_keywords() {
-        let mut test_strs = [
+        let test_strs = [
             ("package com.tom.test", "package"),
             ("import com.tom.test.MyClass", "import"),
             ("class John", "class"),

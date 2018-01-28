@@ -1,3 +1,3 @@
 extern crate regex;
 
-mod lexer;
+pub mod lexer;
