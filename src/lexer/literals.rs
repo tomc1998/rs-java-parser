@@ -23,7 +23,7 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static
                 token_type: TokenType::Key,
                 val: tok_str,
             }));
-            input.nth(tok_str.len()-1);
+            input.nth(tok_str.len() - 1);
             return tok;
         }
     }
@@ -84,27 +84,28 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static
             val: &input_str[..ix],
         }))
     } else if re_digit.is_match(input_str) {
-        let re_number_literal = RegexBuilder::new(r"^(0x|0b)?[0-9a-f]+\.?[0-9a-f]*(l|f|d)?")
+        let re_number_literal = RegexBuilder::new(r"^(0x|0b)?([0-9a-f]_?)+\.?([0-9a-f]_?)*(l|f|d)?")
             .case_insensitive(true)
-            .build().unwrap();
+            .build()
+            .unwrap();
         let literal_match = re_number_literal.find(input_str).unwrap();
-        input.nth(literal_match.end()-1);
+        input.nth(literal_match.end() - 1);
         Ok(Some(Token {
             token_type: TokenType::Literal,
             val: &input_str[..literal_match.end()],
         }))
     } else if input_str.chars().next() == Some('.') {
-        // Special case of number literal where . is the first cahr, like .2f
-        let re_number_literal = RegexBuilder::new(r"^(0x)?\.[0-9a-f]+(f|d)?")
+        // Special case of number literal where . is the first char, like .2f
+        let re_number_literal = RegexBuilder::new(r"^(0x)?\.([0-9a-f]_?)+(f|d)?")
             .case_insensitive(true)
-            .build().unwrap();
+            .build()
+            .unwrap();
         let literal_match = re_number_literal.find(input_str);
         if literal_match.is_none() {
             Ok(None)
-        }
-        else {
+        } else {
             let literal_match = literal_match.unwrap();
-            input.nth(literal_match.end()-1);
+            input.nth(literal_match.end() - 1);
             Ok(Some(Token {
                 token_type: TokenType::Literal,
                 val: &input_str[..literal_match.end()],
@@ -157,25 +158,23 @@ mod tests {
             ("0.0f + 50l", "0.0f"),
             ("0.f + 50l", "0.f"),
             ("0.F + 50.f", "0.F"),
-            ("0b00001101 + 1", "0b00001101")
+            ("0b00001101 + 1", "0b00001101"),
+            ("999_999_999.99f + 40.0f", "999_999_999.99f"),
+            ("0xFF_EC_DE_5E + 2", "0xFF_EC_DE_5E")
         );
     }
 
     #[test]
     fn it_should_lex_all_keyword_literals() {
-        test_lexing_double_unwrap!( 
-            ("true;", "true"),
-            ("false; i = i + 1;", "false"),
-            ("null ", "null")
-        );
+        test_lexing_double_unwrap!(("true;", "true"), ("false; i = i + 1;", "false"), (
+            "null ",
+            "null"
+        ));
     }
 
     #[test]
     fn it_should_lex_character_literals() {
-        test_lexing_double_unwrap!( 
-            ("'a';", "'a'"),
-            ("'\\n' == newlineChar", "'\\n'")
-        );
+        test_lexing_double_unwrap!(("'a';", "'a'"), ("'\\n' == newlineChar", "'\\n'"));
     }
 
     #[test]
