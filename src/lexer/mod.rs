@@ -1,5 +1,7 @@
 mod token;
 mod keywords;
+mod identifiers;
+mod punctuation;
 
 pub use self::token::{Token, TokenType};
 

@@ -1,5 +1,5 @@
 pub enum TokenType {
-   Key, Punc, Identifier,
+   Key, Punc, Ident,
 }
 
 pub struct Token<'a> {

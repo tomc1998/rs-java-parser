@@ -12,7 +12,7 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
         if input_str.starts_with(key) {
             let tok = Some(Token {
                 token_type: TokenType::Key,
-                val: input.as_str()[0..key.len()-1].trim(),
+                val: input_str[0..key.len()-1].trim(),
             });
             input.nth(key.len()-1);
             return tok;
