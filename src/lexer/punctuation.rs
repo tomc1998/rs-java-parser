@@ -5,7 +5,7 @@ use lexer::token::{Token, TokenType};
 /// Try to lex punctuation character from the given char stream.
 pub fn lex<'a>(input: &mut CharStream<'a>) -> Option<Token<'a>> {
     let input_str = input.as_str();
-    let re_punc = Regex::new(r"^[\.\(\)\[\]{};]").unwrap();
+    let re_punc = Regex::new(r"^[\.\(\)\[\]{};@]").unwrap();
     if re_punc.is_match(input_str) {
         input.next();
         Some(Token {
@@ -23,7 +23,7 @@ mod tests {
 
     #[test]
     fn it_lexes_valid_punctuation() {
-        let test_punc_chars_str = "{}[].;";
+        let test_punc_chars_str = "{}[].;@";
         let mut test_punc_chars = test_punc_chars_str.chars();
         for _ in 0..test_punc_chars_str.len() {
             let punc_str = &test_punc_chars.as_str()[0..1];

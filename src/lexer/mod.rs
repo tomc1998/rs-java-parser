@@ -65,7 +65,6 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
             token_list.push(token.unwrap());
             continue;
         }
-
         let token = literal::lex(&mut input);
         if token.is_err() {
             panic!("{}", token.err().unwrap());
