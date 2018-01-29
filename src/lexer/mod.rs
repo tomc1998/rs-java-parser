@@ -41,6 +41,7 @@ mod identifiers;
 mod punctuation;
 mod operators;
 mod literals;
+mod comments;
 mod common;
 
 pub use self::token::{Token, TokenType};
@@ -63,6 +64,7 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
     let punctuation_lexer = punctuation::PunctuationLexer::new();
     let operators_lexer = operators::OperatorsLexer::new();
     let literals_lexer = literals::LiteralsLexer::new();
+    let comments_lexer = comments::CommentsLexer::new();
 
     while input.as_str().len() > 0 {
         common::consume_whitespace(&mut input);
@@ -71,6 +73,15 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
             break;
         }
 
+        let token = comments_lexer.lex(&mut input);
+        if token.is_err() {
+            panic!("{}", token.err().unwrap());
+        }
+        let token = token.unwrap();
+        if token.is_some() {
+            token_list.push(token.unwrap());
+            continue;
+        }
         let token = literals_lexer.lex(&mut input);
         if token.is_err() {
             panic!("{}", token.err().unwrap());
