@@ -5,3 +5,12 @@ authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
 
 [dependencies]
 regex = "0.2"
+
+[profile.release]
+debug = true
+
+[features]
+
+# Set this feature whilst benching, enables unstable nightly features for
+# benching.
+bench = []

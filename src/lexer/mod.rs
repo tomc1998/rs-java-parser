@@ -1,12 +1,14 @@
 /// Given a list of tuples where the first element is the input and the 2nd element is the expected
-/// lexer token output, check that lex(input) produces this correctly.
+/// lexer token output, check that Lexer::lex(input) produces this correctly.
 #[macro_export]
 macro_rules! test_lexing {
     ( $(( $input:expr, $expected:expr )),* ) => {
         {
+            let lexer = Lexer::new();
             $(
                 let mut chars = $input.chars();
-                let _tok = lex(&mut chars).expect(&("Failed to lex: ".to_owned() + $input));
+                let _tok = lexer.lex(&mut chars)
+                    .expect(&("Failed to lex: ".to_owned() + $input));
                 assert_eq!($expected, _tok.val);
                 assert_eq!(chars.as_str(), &$input[$expected.len()..]);
             )*
@@ -21,9 +23,11 @@ macro_rules! test_lexing {
 macro_rules! test_lexing_double_unwrap {
     ( $(( $input:expr, $expected:expr )),* ) => {
         {
+            let lexer = Lexer::new();
             $(
                 let mut chars = $input.chars();
-                let _tok = lex(&mut chars).unwrap().expect(&("Failed to lex: ".to_owned() + $input));
+                let _tok = lexer.lex(&mut chars).unwrap()
+                    .expect(&("Failed to lex: ".to_owned() + $input));
                 assert_eq!(_tok.val, $expected);
                 assert_eq!(chars.as_str(), &$input[$expected.len()..]);
             )*
@@ -54,6 +58,12 @@ pub fn lex_str<'a>(input: &'a str) -> Vec<Token<'a>> {
 pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
     let mut token_list = Vec::new();
 
+    let keywords_lexer = keywords::KeywordsLexer::new();
+    let identifiers_lexer = identifiers::IdentifiersLexer::new();
+    let punctuation_lexer = punctuation::PunctuationLexer::new();
+    let operators_lexer = operators::OperatorsLexer::new();
+    let literals_lexer = literals::LiteralsLexer::new();
+
     while input.as_str().len() > 0 {
         common::consume_whitespace(&mut input);
 
@@ -61,7 +71,7 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
             break;
         }
 
-        let token = literals::lex(&mut input);
+        let token = literals_lexer.lex(&mut input);
         if token.is_err() {
             panic!("{}", token.err().unwrap());
         }
@@ -70,22 +80,22 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
             token_list.push(token.unwrap());
             continue;
         }
-        let token = keywords::lex(&mut input);
+        let token = keywords_lexer.lex(&mut input);
         if token.is_some() {
             token_list.push(token.unwrap());
             continue;
         }
-        let token = identifiers::lex(&mut input);
+        let token = identifiers_lexer.lex(&mut input);
         if token.is_some() {
             token_list.push(token.unwrap());
             continue;
         }
-        let token = punctuation::lex(&mut input);
+        let token = punctuation_lexer.lex(&mut input);
         if token.is_some() {
             token_list.push(token.unwrap());
             continue;
         }
-        let token = operators::lex(&mut input);
+        let token = operators_lexer.lex(&mut input);
         if token.is_some() {
             token_list.push(token.unwrap());
             continue;
@@ -98,11 +108,15 @@ pub fn lex_char_stream<'a>(mut input: CharStream<'a>) -> Vec<Token<'a>> {
     return token_list;
 }
 
-#[cfg(test)]
-mod test {
+ 
+#[cfg(feature = "bench")]
+mod benches {
+    extern crate test;
     use super::lex_str;
-    #[test]
-    fn it_should_lex_valid_java_code() {
+    use self::test::Bencher;
+
+    #[bench]
+    fn test_lex(b: &mut Bencher) {
         let java_code = r#"
         package com.tom.test;
 
@@ -116,6 +130,6 @@ mod test {
             }
         }
         "#;
-        println!("{:?}", lex_str(java_code));
+        b.iter(|| lex_str(java_code).len());
     }
 }
