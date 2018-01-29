@@ -6,8 +6,16 @@ authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
 [dependencies]
 regex = "0.2"
 
+[profile.dev]
+opt-level = 0
+codegen-units = 4
+
 [profile.release]
 debug = true
+
+[profile.bench]
+opt-level = 3
+codegen-units = 1
 
 [features]
 

@@ -3,19 +3,14 @@ use lexer::CharStream;
 use lexer::token::{Token, TokenType};
 
 pub struct LiteralsLexer {
-    keyword_literals: [Regex; 4],
+    re_keyword_literal: Regex,
     number_lit_regexes: [Regex; 4],
 }
 
 impl LiteralsLexer {
     pub fn new() -> LiteralsLexer {
         LiteralsLexer {
-            keyword_literals: [
-                Regex::new(r"^true\b").unwrap(),
-                Regex::new(r"^false\b").unwrap(),
-                Regex::new(r"^null\b").unwrap(),
-                Regex::new(r"^true\b").unwrap(),
-            ],
+            re_keyword_literal: Regex::new(r"^(true|false|null|true)\b").unwrap(),
 
             number_lit_regexes: [
                 // Hexidecimal number regular expr
@@ -50,18 +45,16 @@ impl LiteralsLexer {
         let input_str = input.as_str();
 
         // A list of regex matching 'keyword' literals, like 'true' / 'false' / 'null'
-        for key in self.keyword_literals.iter() {
-            let key_match = key.find(input_str);
-            if key_match.is_some() {
-                let key_match = key_match.unwrap();
-                let tok_str = input_str[0..key_match.end()].trim();
-                let tok = Ok(Some(Token {
-                    token_type: TokenType::Key,
-                    val: tok_str,
-                }));
-                input.nth(tok_str.len() - 1);
-                return tok;
-            }
+        let key_match = self.re_keyword_literal.find(input_str);
+        if key_match.is_some() {
+            let key_match = key_match.unwrap();
+            let tok_str = input_str[0..key_match.end()].trim();
+            let tok = Ok(Some(Token {
+                token_type: TokenType::Key,
+                val: tok_str,
+            }));
+            input.nth(tok_str.len() - 1);
+            return tok;
         }
 
         if &input_str[..1] == "\"" {
