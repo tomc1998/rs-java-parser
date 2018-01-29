@@ -24,7 +24,7 @@ macro_rules! test_lexing_double_unwrap {
             $(
                 let mut chars = $input.chars();
                 let _tok = lex(&mut chars).unwrap().expect(&("Failed to lex: ".to_owned() + $input));
-                assert_eq!($expected, _tok.val);
+                assert_eq!(_tok.val, $expected);
                 assert_eq!(chars.as_str(), &$input[$expected.len()..]);
             )*
         }

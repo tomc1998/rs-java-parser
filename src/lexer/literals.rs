@@ -28,7 +28,6 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static
         }
     }
 
-    let re_digit = Regex::new("^\\d").unwrap();
     if &input_str[..1] == "\"" {
         input.next();
         // Find the matching close "
@@ -83,36 +82,46 @@ pub fn lex<'a>(input: &mut CharStream<'a>) -> Result<Option<Token<'a>>, &'static
             token_type: TokenType::Literal,
             val: &input_str[..ix],
         }))
-    } else if re_digit.is_match(input_str) {
-        let re_number_literal = RegexBuilder::new(r"^(0x|0b)?([0-9a-f]_?)+\.?([0-9a-f]_?)*(l|f|d)?")
-            .case_insensitive(true)
-            .build()
-            .unwrap();
-        let literal_match = re_number_literal.find(input_str).unwrap();
-        input.nth(literal_match.end() - 1);
-        Ok(Some(Token {
-            token_type: TokenType::Literal,
-            val: &input_str[..literal_match.end()],
-        }))
-    } else if input_str.chars().next() == Some('.') {
-        // Special case of number literal where . is the first char, like .2f
-        let re_number_literal = RegexBuilder::new(r"^(0x)?\.([0-9a-f]_?)+(f|d)?")
-            .case_insensitive(true)
-            .build()
-            .unwrap();
-        let literal_match = re_number_literal.find(input_str);
-        if literal_match.is_none() {
-            Ok(None)
-        } else {
-            let literal_match = literal_match.unwrap();
-            input.nth(literal_match.end() - 1);
-            Ok(Some(Token {
-                token_type: TokenType::Literal,
-                val: &input_str[..literal_match.end()],
-            }))
-        }
     } else {
-        Ok(None)
+        // Try for number literals
+        let number_lit_regexes =
+            [
+                // Hexidecimal number regular expr
+                RegexBuilder::new(r"^0x([0-9a-f]_?)+\.?([0-9a-f]_?)*(p(\+|-)\d+)?(f|d)?")
+                    .case_insensitive(true)
+                    .build()
+                    .unwrap(),
+                // Special case for the decimal point first for hex numbers, i.e. '.ABf'
+                RegexBuilder::new(r"^0x\.([0-9a-f]_?)+(p(\+|-)\d+)?(f|d)?")
+                    .case_insensitive(true)
+                    .build()
+                    .unwrap(),
+                // Number literal regex
+                RegexBuilder::new(r"^(0b)?([0-9]_?)+\.?([0-9]_?)*(e(\+|-)\d+)?(l|f|d)?")
+                    .case_insensitive(true)
+                    .build()
+                    .unwrap(),
+                // Special case for the decimal point first, i.e. '.2f'
+                RegexBuilder::new(r"^\.([0-9]_?)+(e(\+|-)\d+)?(f|d)?")
+                    .case_insensitive(true)
+                    .build()
+                    .unwrap(),
+            ];
+
+        let mut token = Ok(None);
+        for re in number_lit_regexes.iter() {
+            let literal_match = re.find(input_str);
+            if literal_match.is_some() {
+                let literal_match = literal_match.unwrap();
+                input.nth(literal_match.end() - 1);
+                token = Ok(Some(Token {
+                    token_type: TokenType::Literal,
+                    val: &input_str[..literal_match.end()],
+                }));
+                break;
+            }
+        }
+        token
     }
 }
 
@@ -160,7 +169,9 @@ mod tests {
             ("0.F + 50.f", "0.F"),
             ("0b00001101 + 1", "0b00001101"),
             ("999_999_999.99f + 40.0f", "999_999_999.99f"),
-            ("0xFF_EC_DE_5E + 2", "0xFF_EC_DE_5E")
+            ("0xFF_EC_DE_5E + 2", "0xFF_EC_DE_5E"),
+            ("1.4e-23f + 4.0f", "1.4e-23f"),
+            (".4e+23f - 4.0f", ".4e+23f")
         );
     }
 
