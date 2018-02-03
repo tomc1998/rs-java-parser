@@ -8,7 +8,7 @@ pub struct KeywordsLexer {
 impl KeywordsLexer {
     pub fn new() -> KeywordsLexer {
         KeywordsLexer {
-            re_keyword: Regex::new(r"^(import|package|class|if|while|for|public|private|static|final|synchronized|native|strictfp)\b").unwrap(),
+            re_keyword: Regex::new(r"^(abstract|continue|for|new|switch|assert|default|goto|package|synchronized|boolean|do|if|private|this|break|double|implements|protected|throw|byte|else|import|public|throws|case|enum|instanceof|return|transient|catch|extends|int|short|try|char|final|interface|static|void|class|finally|long|strictfp|volatile|const|float|native|super|while)\b").unwrap(),
         }
     }
 
