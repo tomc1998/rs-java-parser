@@ -11,7 +11,7 @@ impl IdentifiersLexer {
     pub fn new() -> IdentifiersLexer {
         IdentifiersLexer {
             re_starts_with_char: Regex::new("^[A-Za-z]").unwrap(),
-            re_first_non_ident_char: Regex::new("[^A-Za-z0-9]").unwrap(),
+            re_first_non_ident_char: Regex::new(r"[^A-Za-z0-9\.<>]").unwrap(),
         }
     }
 
@@ -50,10 +50,10 @@ mod tests {
     fn it_lexes_valid_identifiers() {
         test_lexing!( 
             ("var;", "var"),
-            ("myVar.callFunc();", "myVar"),
+            ("myVar.callFunc();", "myVar.callFunc"),
             ("myVar = \"hello\";", "myVar"),
-            ("com.tom.MyClass", "com"),
-            ("com.tom.MyClass", "com")
+            ("com.tom.MyClass", "com.tom.MyClass"),
+            ("java.util.ArrayList<Integer>()", "java.util.ArrayList<Integer>")
         );
     }
 
