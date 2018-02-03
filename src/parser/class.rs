@@ -28,6 +28,7 @@ pub struct Class<'a> {
     pub extends: &'a str,
     pub members: Vec<ClassMember<'a>>,
     pub inner_classes: Vec<Class<'a>>,
+    pub modifiers: Vec<Modifier>
 }
 
 impl<'a> Class<'a> {
@@ -39,6 +40,7 @@ impl<'a> Class<'a> {
             extends: "",
             members: Vec::new(),
             inner_classes: Vec::new(),
+            modifiers: Vec::new(),
         }
     }
 }
@@ -68,7 +70,9 @@ fn parse_class_member<'a>(
     )));
 
     if tok.val == "class" {
-        return Ok(ClassMemberOrInnerClass::Class(parse_class(tok_stream)?));
+        let mut class = parse_class(tok_stream)?;
+        class.modifiers = modifiers;
+        return Ok(ClassMemberOrInnerClass::Class(class));
     }
     tok_stream.next().unwrap();
 

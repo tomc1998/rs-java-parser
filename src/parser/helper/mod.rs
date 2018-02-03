@@ -3,7 +3,7 @@
 mod modifiers;
 mod surrounded;
 
-pub use self::modifiers::{Modifier, parse_modifiers};
+pub use self::modifiers::{Modifier, parse_modifiers, try_parse_modifier};
 pub use self::surrounded::consume_surrounded;
 
 use lexer::{TokenType, Token};

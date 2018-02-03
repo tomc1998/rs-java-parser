@@ -1,6 +1,7 @@
 //! A parser to parse the declarations of a source file - class / enum / inner class / enum etc.
 
 use super::class::{Class, parse_class};
+use super::helper::try_parse_modifier;
 use super::ParseError;
 use lexer::{TokenType, Token};
 
@@ -20,8 +21,16 @@ pub fn parse_top_level_declarations<'a>(
     // Advance the iterator until before the next class / enum / interface keyword, store this
     // keyword in val
     let val: String;
+
+    // Probably no more than 8 modifiers, cba to check
+    let mut modifiers = Vec::with_capacity(8);
     // Consume until we reach type decl
     loop {
+        let modifier_opt = try_parse_modifier(tok_stream);
+        if modifier_opt.is_some() {
+            modifiers.push(modifier_opt.unwrap());
+            continue;
+        }
         {
             let slice = tok_stream.as_slice();
             if slice.len() == 0 {
@@ -38,7 +47,11 @@ pub fn parse_top_level_declarations<'a>(
         tok_stream.next();
     }
     let declaration = match val.as_ref() {
-        "class" => Declaration::Class(try!(parse_class(tok_stream))),
+        "class" => {
+            let mut class = parse_class(tok_stream)?;
+            class.modifiers = modifiers;
+            Declaration::Class(class)
+        }
         _ => unimplemented!(),
     };
 
@@ -89,6 +102,7 @@ mod tests {
             &Declaration::Class(ref c) => {
                 assert_eq!(c.name, "MyClass");
                 assert_eq!(c.members.len(), 3);
+                assert_eq!(c.modifiers[0], Modifier::Public);
                 assert_eq!(c.members[0].name, "foo");
                 assert_eq!(c.members[0].member_type, MemberType::Variable);
                 assert_eq!(c.members[0].modifiers[0], Modifier::Public);
@@ -101,6 +115,8 @@ mod tests {
                 assert_eq!(c.members[2].modifiers[0], Modifier::Protected);
                 assert_eq!(c.inner_classes[0].name, "MyInner");
                 assert_eq!(c.inner_classes[0].members[0].name, "innerFoo");
+                assert_eq!(c.inner_classes[0].modifiers[0], Modifier::Public);
+                assert_eq!(c.inner_classes[0].modifiers[1], Modifier::Static);
             }
         }
     }
