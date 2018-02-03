@@ -50,17 +50,47 @@ pub fn parse_top_level_declarations<'a>(
 #[cfg(test)]
 mod tests {
     use lexer::lex_str;
-    use super::parse_top_level_declarations;
+    use parser::class::MemberType;
+    use super::{parse_top_level_declarations, Declaration};
 
     #[test]
     fn test() {
-        let tokens = lex_str("hello void class Hello<T> extends ArrayList<T> implements MyInterface, OtherInterface { }");
+        let tokens = lex_str(r#"
+        class MyClass {
+            int foo = 4;
+            double bar;
+
+            void doThing() {
+                System.out.println("Hello, world");
+                if (foo > 4) {
+                    doThing();
+                }
+                else {
+                    doOtherThing();
+                }
+            }
+        }"#);
         let declarations = parse_top_level_declarations(&mut tokens.iter());
         if declarations.is_err() {
             panic!(
                 "Error parsing top level declarations: {:?}",
                 declarations.unwrap_err()
             );
+        }
+        let declarations = declarations.unwrap();
+        assert_eq!(declarations.len(), 1);
+        let decl = &declarations[0];
+        match decl {
+            &Declaration::Class(ref c) => {
+                assert_eq!(c.name, "MyClass");
+                assert_eq!(c.members.len(), 3);
+                assert_eq!(c.members[0].name, "foo");
+                assert_eq!(c.members[0].member_type, MemberType::Variable);
+                assert_eq!(c.members[1].name, "bar");
+                assert_eq!(c.members[1].member_type, MemberType::Variable);
+                assert_eq!(c.members[2].name, "doThing");
+                assert_eq!(c.members[2].member_type, MemberType::Method);
+            }
         }
     }
 }

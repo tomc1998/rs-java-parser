@@ -1,5 +1,11 @@
 //! A module containing loads of helper functions for parsing.
 
+mod modifiers;
+mod surrounded;
+
+pub use self::modifiers::{Modifier, parse_modifiers};
+pub use self::surrounded::consume_surrounded;
+
 use lexer::{TokenType, Token};
 use std::slice::Iter;
 
