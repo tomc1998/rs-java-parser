@@ -19,6 +19,7 @@ pub struct ClassMember<'a> {
     pub member_type: MemberType,
 }
 
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Class<'a> {
     pub name: &'a str,
@@ -26,6 +27,7 @@ pub struct Class<'a> {
     pub implements: Vec<&'a str>,
     pub extends: &'a str,
     pub members: Vec<ClassMember<'a>>,
+    pub inner_classes: Vec<Class<'a>>,
 }
 
 impl<'a> Class<'a> {
@@ -36,8 +38,16 @@ impl<'a> Class<'a> {
             implements: Vec::new(),
             extends: "",
             members: Vec::new(),
+            inner_classes: Vec::new(),
         }
     }
+}
+
+/// Either a classmember or inner class. Used by parse_class_member, which needs to return one of
+/// these two values.
+enum ClassMemberOrInnerClass<'a> {
+    Class(Class<'a>),
+    ClassMember(ClassMember<'a>),
 }
 
 /// Parse a class member. Token stream should be on the class member (i.e. just after the {, or
@@ -45,15 +55,22 @@ impl<'a> Class<'a> {
 ///
 /// # Params
 /// * `class_name` - This is needed to detect constructors.
-pub fn parse_class_member<'a>(
+/// # Returns
+/// Can return either a class member or an inner class.
+fn parse_class_member<'a>(
     class_name: &'a str,
     tok_stream: &mut Iter<'a, Token<'a>>,
-) -> Result<ClassMember<'a>, ParseError> {
+) -> Result<ClassMemberOrInnerClass<'a>, ParseError> {
     let modifiers = try!(parse_modifiers(tok_stream));
 
-    let tok = try!(tok_stream.next().ok_or(ParseError::new(
+    let tok = try!(tok_stream.as_slice().first().ok_or(ParseError::new(
         "Expected token, got EOF".to_owned(),
     )));
+
+    if tok.val == "class" {
+        return Ok(ClassMemberOrInnerClass::Class(parse_class(tok_stream)?));
+    }
+    tok_stream.next().unwrap();
 
     // If constructor, just parse straight away
     if tok.val == class_name {
@@ -67,11 +84,11 @@ pub fn parse_class_member<'a>(
             }
         }
         // Consume all in {}
-        return Ok(ClassMember {
+        return Ok(ClassMemberOrInnerClass::ClassMember(ClassMember {
             modifiers: modifiers,
             name: tok.val,
             member_type: MemberType::Constructor,
-        });
+        }));
     }
 
     // Either a method or a variable, regardless this ident will be the type
@@ -106,22 +123,22 @@ pub fn parse_class_member<'a>(
                     break;
                 }
             }
-            return Ok(ClassMember {
+            return Ok(ClassMemberOrInnerClass::ClassMember(ClassMember {
                 modifiers: modifiers,
                 name: member_name,
                 member_type: MemberType::Variable,
-            });
+            }));
         }
         "(" => {
             // Method
             // Now we need to consume until we hit the matching }
             try!(consume_surrounded(tok_stream, "(", ")"));
             try!(consume_surrounded(tok_stream, "{", "}"));
-            return Ok(ClassMember {
+            return Ok(ClassMemberOrInnerClass::ClassMember(ClassMember {
                 modifiers: modifiers,
                 name: member_name,
                 member_type: MemberType::Method,
-            });
+            }));
         }
         _ => {
             return Err(ParseError::new(
@@ -199,10 +216,14 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
             // Make sure to consume this token we peeked
             tok_stream.next().unwrap();
             return Ok(class);
+        } else if tok.val == "class" {
+            // If inner class, parse a class.
         } else {
-            class.members.push(try!(
-                parse_class_member(class.name, tok_stream)
-            ));
+            let member_or_inner = try!(parse_class_member(class.name, tok_stream));
+            match member_or_inner {
+                ClassMemberOrInnerClass::Class(c) => class.inner_classes.push(c),
+                ClassMemberOrInnerClass::ClassMember(m) => class.members.push(m),
+            }
         }
     }
 }

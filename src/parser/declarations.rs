@@ -70,6 +70,10 @@ mod tests {
                     doOtherThing();
                 }
             }
+
+            public static class MyInner {
+                private int innerFoo = 0;
+            }
         }"#);
         let declarations = parse_top_level_declarations(&mut tokens.iter());
         if declarations.is_err() {
@@ -95,6 +99,8 @@ mod tests {
                 assert_eq!(c.members[2].name, "doThing");
                 assert_eq!(c.members[2].member_type, MemberType::Method);
                 assert_eq!(c.members[2].modifiers[0], Modifier::Protected);
+                assert_eq!(c.inner_classes[0].name, "MyInner");
+                assert_eq!(c.inner_classes[0].members[0].name, "innerFoo");
             }
         }
     }
