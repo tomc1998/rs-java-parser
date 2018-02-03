@@ -8,7 +8,7 @@ pub struct PunctuationLexer {
 
 impl PunctuationLexer {
     pub fn new() -> PunctuationLexer {
-        PunctuationLexer { re_punc: Regex::new(r"^(\.\.\.|::|[,\.\(\)\[\]{};@])").unwrap() }
+        PunctuationLexer { re_punc: Regex::new(r"^(\.\.\.|::|[,\.\(\)\[\]{};@<>])").unwrap() }
     }
 
     /// Try to lex punctuation character from the given char stream.

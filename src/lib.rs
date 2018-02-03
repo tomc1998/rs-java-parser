@@ -4,5 +4,6 @@ extern crate test;
 extern crate regex;
 
 pub mod lexer;
+pub mod parser;
 pub mod project;
 

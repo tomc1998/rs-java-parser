@@ -15,4 +15,15 @@ public class Main {
       System.out.println(p.getName() + ", aged " + p.getAge());
     }
   }
+  class InnerClass {
+    public int a;
+  }
+}
+
+class PrivateClass {
+  public int a;
+}
+
+enum PrivateEnum {
+  A, B, C
 }
