@@ -226,3 +226,28 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::parse_class;
+    use super::helper::Modifier;
+    use lexer::lex_str;
+
+    #[test]
+    fn test_class_parse() {
+        let class_src = r#"
+        class Foo {
+            public static void main(String[] args) {
+                System.out.println("hello, world");
+            }
+        }
+        "#;
+        let lexed = lex_str(class_src);
+        let class = parse_class(&mut lexed.iter()).expect("Class failed to parse");
+        assert_eq!(class.name, "Foo");
+        assert_eq!(class.members.len(), 1);
+        assert_eq!(class.members[0].modifiers[0], Modifier::Public);
+        assert_eq!(class.members[0].modifiers[1], Modifier::Static);
+        assert_eq!(class.members[0].name, "main");
+    }
+}

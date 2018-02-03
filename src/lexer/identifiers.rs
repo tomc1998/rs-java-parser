@@ -11,7 +11,7 @@ impl IdentifiersLexer {
     pub fn new() -> IdentifiersLexer {
         IdentifiersLexer {
             re_starts_with_char: Regex::new("^[A-Za-z]").unwrap(),
-            re_first_non_ident_char: Regex::new(r"[^A-Za-z0-9\.<>]").unwrap(),
+            re_first_non_ident_char: Regex::new(r"[^A-Za-z0-9\.<>\[\]]").unwrap(),
         }
     }
 
