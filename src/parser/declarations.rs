@@ -51,6 +51,7 @@ pub fn parse_top_level_declarations<'a>(
 mod tests {
     use lexer::lex_str;
     use parser::class::MemberType;
+    use parser::helper::Modifier;
     use super::{parse_top_level_declarations, Declaration};
 
     #[test]
@@ -86,10 +87,14 @@ mod tests {
                 assert_eq!(c.members.len(), 3);
                 assert_eq!(c.members[0].name, "foo");
                 assert_eq!(c.members[0].member_type, MemberType::Variable);
+                assert_eq!(c.members[0].modifiers[0], Modifier::Public);
                 assert_eq!(c.members[1].name, "bar");
                 assert_eq!(c.members[1].member_type, MemberType::Variable);
+                assert_eq!(c.members[1].modifiers[0], Modifier::Public);
+                assert_eq!(c.members[1].modifiers[1], Modifier::Static);
                 assert_eq!(c.members[2].name, "doThing");
                 assert_eq!(c.members[2].member_type, MemberType::Method);
+                assert_eq!(c.members[2].modifiers[0], Modifier::Protected);
             }
         }
     }
