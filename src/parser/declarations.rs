@@ -56,11 +56,11 @@ mod tests {
     #[test]
     fn test() {
         let tokens = lex_str(r#"
-        class MyClass {
-            int foo = 4;
-            double bar;
+        public class MyClass {
+            public int foo = 4;
+            public static double bar;
 
-            void doThing() {
+            protected void doThing() {
                 System.out.println("Hello, world");
                 if (foo > 4) {
                     doThing();

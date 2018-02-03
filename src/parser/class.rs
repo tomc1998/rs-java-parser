@@ -49,7 +49,7 @@ pub fn parse_class_member<'a>(
     class_name: &'a str,
     tok_stream: &mut Iter<'a, Token<'a>>,
 ) -> Result<ClassMember<'a>, ParseError> {
-    let modifiers = parse_modifiers(tok_stream);
+    let modifiers = try!(parse_modifiers(tok_stream));
 
     let tok = try!(tok_stream.next().ok_or(ParseError::new(
         "Expected token, got EOF".to_owned(),
