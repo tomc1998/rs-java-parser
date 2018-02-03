@@ -74,19 +74,14 @@ fn parse_class_member<'a>(
         class.modifiers = modifiers;
         return Ok(ClassMemberOrInnerClass::Class(class));
     }
+
     tok_stream.next().unwrap();
 
     // If constructor, just parse straight away
     if tok.val == class_name {
         // Consume until we hit the start of the method
-        loop {
-            let tok = try!(tok_stream.next().ok_or(ParseError::new(
-                "Expected token, got EOF".to_owned(),
-            )));
-            if tok.val == ")" {
-                break;
-            }
-        }
+        try!(consume_surrounded(tok_stream, "(", ")"));
+        try!(consume_surrounded(tok_stream, "{", "}"));
         // Consume all in {}
         return Ok(ClassMemberOrInnerClass::ClassMember(ClassMember {
             modifiers: modifiers,
