@@ -10,6 +10,7 @@ pub struct Class<'a> {
     name: &'a str,
     type_params: Vec<&'a str>,
     implements: Vec<&'a str>,
+    extends: &'a str,
 }
 
 impl<'a> Class<'a> {
@@ -18,6 +19,7 @@ impl<'a> Class<'a> {
             name: "",
             type_params: Vec::new(),
             implements: Vec::new(),
+            extends: "",
         }
     }
 }
@@ -33,7 +35,8 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
     )));
     if class_name_tok.token_type != TokenType::Ident {
         return Err(ParseError::new(
-            "Expected class name, got '".to_owned() + class_name_tok.val + "'",
+            "Expected class name, got '".to_owned() +
+                class_name_tok.val + "'",
         ));
     }
     class.name = class_name_tok.val;
@@ -56,10 +59,22 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
             )));
         }
         if tok.val == "extends" {
-            unimplemented!("Not implemented extended class parsing");
+            tok = try!(tok_stream.next().ok_or(ParseError::new(
+                "Expected token, got EOF".to_owned(),
+            )));
+            if tok.token_type != TokenType::Ident {
+                return Err(ParseError::new("Expected identifier, got ".to_owned() + tok.val));
+            }
+            class.extends = tok.val;
+            tok = try!(tok_stream.next().ok_or(ParseError::new(
+                "Expected token, got EOF".to_owned(),
+            )));
         }
         if tok.val == "implements" {
-            class.implements = helper::parse_comma_separated_identifier_list(tok_stream)
+            class.implements = helper::parse_comma_separated_identifier_list(tok_stream);
+            tok = try!(tok_stream.next().ok_or(ParseError::new(
+                "Expected token, got EOF".to_owned(),
+            )));
         }
         if tok.val != "{" {
             return Err(ParseError::new("Expected '{'".to_owned()));

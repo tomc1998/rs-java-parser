@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test() {
-        let tokens = lex_str("hello void class Hello { asd }");
+        let tokens = lex_str("hello void class Hello<T> extends ArrayList implements MyInterface, OtherInterface { }");
         let declarations = parse_top_level_declarations(&mut tokens.iter());
         if declarations.is_err() {
             panic!(

@@ -1,20 +1,19 @@
 //! A module containing loads of helper functions for parsing.
 
 use lexer::{TokenType, Token};
+use std::slice::Iter;
 
 /// Parse identifier tokens in a comma-separated list until a token breaks the pattern. Will not
 /// consume the token that breaks the pattern.
 ///
 /// List cannot start on the comma - nothing will be returned in this case.
-pub fn parse_comma_separated_identifier_list<'a, I>(tok_stream: &mut I) -> Vec<&'a str>
-where
-    I: Iterator<Item = &'a Token<'a>>,
-{
-    let mut tok_stream = tok_stream.peekable();
+pub fn parse_comma_separated_identifier_list<'a>(
+    tok_stream: &mut Iter<'a, Token<'a>>,
+) -> Vec<&'a str> {
     let mut identifiers = Vec::new();
     loop {
         {
-            let tok = tok_stream.peek();
+            let tok = tok_stream.as_slice().first();
             if tok.is_none() {
                 return identifiers;
             }
@@ -26,7 +25,7 @@ where
         identifiers.push(tok_stream.next().unwrap().val);
 
         {
-            let tok = tok_stream.peek();
+            let tok = tok_stream.as_slice().first();
             if tok.is_none() {
                 return identifiers;
             }
