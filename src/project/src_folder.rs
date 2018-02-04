@@ -4,7 +4,7 @@ use std;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::convert::AsRef;
-use lexer::{Token, lex_str};
+use lexer::{Token, TokenType, lex_str};
 
 /// A list of sources, which can be lexed to produce a LexedSourceFolder (maintaining a borrow on
 /// this struct)
@@ -62,6 +62,27 @@ impl SourceFolder {
     }
 }
 
+impl<'a> LexedSourceFolder<'a> {
+    /// Strip the comments from the source. This will be necessary for most parsing.
+    pub fn strip_comments(&mut self) {
+        for &mut (ref mut token_list, _) in &mut self.token_lists {
+            let mut ix = 0;
+            loop {
+                if ix >= token_list.len() {
+                    break;
+                }
+                let tok = token_list[ix];
+                if tok.token_type == TokenType::Comment {
+                    token_list.remove(ix);
+                }
+                else {
+                    ix += 1;
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::SourceFolder;
@@ -100,6 +121,19 @@ mod tests {
             }
             assert!(!tokens.is_empty(), "No tokens in lexed file");
             assert!(p.exists(), "Path to lexed file doesn't exist");
+        }
+    }
+
+    #[test]
+    fn test_strip_comments() {
+        let source_folder =
+            SourceFolder::read("res/test-src").expect("Source folder failed to read");
+        let mut lexed = source_folder.lex();
+        lexed.strip_comments();
+        for &(ref token_list, _) in &lexed.token_lists {
+            for t in token_list {
+                assert_ne!(t.token_type, TokenType::Comment);
+            }
         }
     }
 }
