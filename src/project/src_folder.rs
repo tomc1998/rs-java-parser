@@ -85,7 +85,7 @@ impl<'a> LexedSourceFolder<'a> {
     }
 
     /// Parse all the type declarations in this source folder
-    pub fn parse_declarations(&'a self) -> Result<Vec<Declaration<'a>>, ParseError> {
+    pub fn parse_declarations(&'a self) -> Result<Vec<Declaration>, ParseError> {
         let mut declarations = Vec::new();
         for &(ref token_list, _) in &self.token_lists {
             declarations.extend_from_slice(

@@ -8,9 +8,9 @@ use java_model::*;
 
 /// Either a classmember or inner class. Used by parse_class_member, which needs to return one of
 /// these two values.
-enum ClassMemberOrInnerClass<'a> {
-    Class(Class<'a>),
-    ClassMember(ClassMember<'a>),
+enum ClassMemberOrInnerClass {
+    Class(Class),
+    ClassMember(ClassMember),
 }
 
 /// Parse a class member. Token stream should be on the class member (i.e. just after the {, or
@@ -20,10 +20,10 @@ enum ClassMemberOrInnerClass<'a> {
 /// * `class_name` - This is needed to detect constructors.
 /// # Returns
 /// Can return either a class member or an inner class.
-fn parse_class_member<'a>(
-    class_name: &'a str,
-    tok_stream: &mut Iter<'a, Token<'a>>,
-) -> Result<ClassMemberOrInnerClass<'a>, ParseError> {
+fn parse_class_member(
+    class_name: &str,
+    tok_stream: &mut Iter<Token>,
+) -> Result<ClassMemberOrInnerClass, ParseError> {
     let modifiers = try!(parse_modifiers(tok_stream));
 
     let tok = try!(tok_stream.as_slice().first().ok_or(ParseError::new(
@@ -46,7 +46,7 @@ fn parse_class_member<'a>(
         // Consume all in {}
         return Ok(ClassMemberOrInnerClass::ClassMember(ClassMember {
             modifiers: modifiers,
-            name: tok.val,
+            name: tok.val.to_owned(),
             member_type: MemberType::Constructor,
         }));
     }
@@ -85,7 +85,7 @@ fn parse_class_member<'a>(
             }
             return Ok(ClassMemberOrInnerClass::ClassMember(ClassMember {
                 modifiers: modifiers,
-                name: member_name,
+                name: member_name.to_owned(),
                 member_type: MemberType::Variable,
             }));
         }
@@ -96,7 +96,7 @@ fn parse_class_member<'a>(
             try!(consume_surrounded(tok_stream, "{", "}"));
             return Ok(ClassMemberOrInnerClass::ClassMember(ClassMember {
                 modifiers: modifiers,
-                name: member_name,
+                name: member_name.to_owned(),
                 member_type: MemberType::Method,
             }));
         }
@@ -110,7 +110,7 @@ fn parse_class_member<'a>(
 
 /// Given a token stream placed on the 'class' keyword, parse and return a Class. Modifiers will
 /// not be parsed, and should be added manually after this function call.
-pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>, ParseError> {
+pub fn parse_class(tok_stream: &mut Iter<Token>) -> Result<Class, ParseError> {
     assert_eq!(tok_stream.next().unwrap().val, "class");
 
     let mut class = Class::new_empty();
@@ -123,7 +123,7 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
                 class_name_tok.val + "'",
         ));
     }
-    class.name = class_name_tok.val;
+    class.name = class_name_tok.val.to_owned();
 
     // Parse class start, i.e. the bit with type declarations, extends / implements etc...
     {
@@ -131,7 +131,8 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
             "Expected token, got EOF".to_owned(),
         )));
         if tok.val == "<" {
-            class.type_params = helper::parse_comma_separated_identifier_list(tok_stream);
+            class.type_params = helper::parse_comma_separated_identifier_list(tok_stream)
+                .into_iter().map(|s| s.to_owned()).collect();
             let closing = try!(tok_stream.next().ok_or(ParseError::new(
                 "Expected '>', got EOF".to_owned(),
             ))).val;
@@ -151,13 +152,14 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
                     "Expected identifier, got ".to_owned() + tok.val,
                 ));
             }
-            class.extends = tok.val;
+            class.extends = tok.val.to_owned();
             tok = try!(tok_stream.next().ok_or(ParseError::new(
                 "Expected token, got EOF".to_owned(),
             )));
         }
         if tok.val == "implements" {
-            class.implements = helper::parse_comma_separated_identifier_list(tok_stream);
+            class.implements = helper::parse_comma_separated_identifier_list(tok_stream)
+                .into_iter().map(|s| s.to_owned()).collect();
             tok = try!(tok_stream.next().ok_or(ParseError::new(
                 "Expected token, got EOF".to_owned(),
             )));
@@ -179,7 +181,7 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
         } else if tok.val == "class" {
             // If inner class, parse a class.
         } else {
-            let member_or_inner = try!(parse_class_member(class.name, tok_stream));
+            let member_or_inner = try!(parse_class_member(&class.name, tok_stream));
             match member_or_inner {
                 ClassMemberOrInnerClass::Class(c) => class.inner_classes.push(c),
                 ClassMemberOrInnerClass::ClassMember(m) => class.members.push(m),

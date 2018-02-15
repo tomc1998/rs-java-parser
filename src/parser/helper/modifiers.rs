@@ -6,7 +6,7 @@ use super::super::ParseError;
 use java_model::*;
 
 /// Returns Some if modifier detected - None if no modifier or EOF
-pub fn try_parse_modifier<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Option<Modifier> {
+pub fn try_parse_modifier(tok_stream: &mut Iter<Token>) -> Option<Modifier> {
     let tok = tok_stream.as_slice().first();
     if tok.is_none() {
         return None;
@@ -32,8 +32,8 @@ pub fn try_parse_modifier<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Option<Mo
     return modifier;
 }
 
-pub fn parse_modifiers<'a>(
-    tok_stream: &mut Iter<'a, Token<'a>>,
+pub fn parse_modifiers(
+    tok_stream: &mut Iter<Token>,
 ) -> Result<Vec<Modifier>, ParseError> {
     let mut modifiers = Vec::new();
 

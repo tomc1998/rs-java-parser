@@ -11,7 +11,7 @@ use std::slice::Iter;
 /// Given a token stream, parse all the top level declarations & return them
 pub fn parse_top_level_declarations<'a>(
     tok_stream: &mut Iter<'a, Token<'a>>,
-) -> Result<Vec<Declaration<'a>>, ParseError> {
+) -> Result<Vec<Declaration>, ParseError> {
     println!("Hello");
     let mut declarations = Vec::new();
 

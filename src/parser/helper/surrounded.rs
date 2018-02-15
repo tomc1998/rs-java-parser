@@ -16,8 +16,8 @@ use std::slice::Iter;
 ///
 /// The token stream should be placed on the starting token - this function will return an error if
 /// not.
-pub fn consume_surrounded<'a>(
-    tok_stream: &mut Iter<'a, Token<'a>>,
+pub fn consume_surrounded(
+    tok_stream: &mut Iter<Token>,
     start: &str,
     end: &str,
 ) -> Result<(), ParseError> {

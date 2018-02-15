@@ -13,9 +13,9 @@ use std::slice::Iter;
 /// consume the token that breaks the pattern.
 ///
 /// List cannot start on the comma - nothing will be returned in this case.
-pub fn parse_comma_separated_identifier_list<'a>(
-    tok_stream: &mut Iter<'a, Token<'a>>,
-) -> Vec<&'a str> {
+pub fn parse_comma_separated_identifier_list(
+    tok_stream: &mut Iter<Token>,
+) -> Vec<String> {
     let mut identifiers = Vec::new();
     loop {
         {
@@ -28,7 +28,7 @@ pub fn parse_comma_separated_identifier_list<'a>(
                 return identifiers;
             }
         }
-        identifiers.push(tok_stream.next().unwrap().val);
+        identifiers.push(tok_stream.next().unwrap().val.to_owned());
 
         {
             let tok = tok_stream.as_slice().first();
