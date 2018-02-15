@@ -1,49 +1,10 @@
 //! Module for parsing class declarations
 
 use super::ParseError;
-use super::helper::{self, parse_modifiers, consume_surrounded, Modifier};
+use super::helper::{self, parse_modifiers, consume_surrounded};
 use lexer::{Token, TokenType};
 use std::slice::Iter;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum MemberType {
-    Variable,
-    Method,
-    Constructor,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ClassMember<'a> {
-    pub modifiers: Vec<Modifier>,
-    pub name: &'a str,
-    pub member_type: MemberType,
-}
-
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Class<'a> {
-    pub name: &'a str,
-    pub type_params: Vec<&'a str>,
-    pub implements: Vec<&'a str>,
-    pub extends: &'a str,
-    pub members: Vec<ClassMember<'a>>,
-    pub inner_classes: Vec<Class<'a>>,
-    pub modifiers: Vec<Modifier>
-}
-
-impl<'a> Class<'a> {
-    fn new_empty() -> Class<'static> {
-        Class {
-            name: "",
-            type_params: Vec::new(),
-            implements: Vec::new(),
-            extends: "",
-            members: Vec::new(),
-            inner_classes: Vec::new(),
-            modifiers: Vec::new(),
-        }
-    }
-}
+use java_model::*;
 
 /// Either a classmember or inner class. Used by parse_class_member, which needs to return one of
 /// these two values.

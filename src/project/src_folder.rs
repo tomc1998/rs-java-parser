@@ -5,6 +5,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::convert::AsRef;
 use lexer::{Token, TokenType, lex_str};
+use parser::declarations::{parse_top_level_declarations};
+use parser::ParseError;
+use java_model::*;
 
 /// A list of sources, which can be lexed to produce a LexedSourceFolder (maintaining a borrow on
 /// this struct)
@@ -74,12 +77,23 @@ impl<'a> LexedSourceFolder<'a> {
                 let tok = token_list[ix];
                 if tok.token_type == TokenType::Comment {
                     token_list.remove(ix);
-                }
-                else {
+                } else {
                     ix += 1;
                 }
             }
         }
+    }
+
+    /// Parse all the type declarations in this source folder
+    pub fn parse_declarations(&'a self) -> Result<Vec<Declaration<'a>>, ParseError> {
+        let mut declarations = Vec::new();
+        for &(ref token_list, _) in &self.token_lists {
+            declarations.extend_from_slice(
+                &try!(parse_top_level_declarations(&mut token_list.iter()))[..],
+            );
+        }
+            println!("Hello");
+        return Ok(declarations);
     }
 }
 
@@ -87,6 +101,8 @@ impl<'a> LexedSourceFolder<'a> {
 mod tests {
     use super::SourceFolder;
     use lexer::TokenType;
+
+    use parser::declarations::Declaration;
 
     #[test]
     fn test_source_is_read() {
@@ -133,6 +149,25 @@ mod tests {
         for &(ref token_list, _) in &lexed.token_lists {
             for t in token_list {
                 assert_ne!(t.token_type, TokenType::Comment);
+            }
+        }
+    }
+
+    #[test]
+    fn test_parse_declarations() {
+        let source_folder =
+            SourceFolder::read("res/test-src").expect("Source folder failed to read");
+        let mut lexed = source_folder.lex();
+        lexed.strip_comments();
+        let declarations = lexed.parse_declarations().expect(
+            "Failed to parse declarations",
+        );
+
+        assert_eq!(declarations.len(), 4);
+
+        match &declarations[0] {
+            &Declaration::Class(ref c) => {
+                assert_eq!(c.name, "Main");
             }
         }
     }

@@ -5,6 +5,7 @@ authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
 
 [dependencies]
 regex = "0.2"
+java-model = { path = "rs-java-model" }
 
 [profile.dev]
 opt-level = 0

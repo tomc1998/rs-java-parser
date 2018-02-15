@@ -3,21 +3,7 @@
 use lexer::Token;
 use std::slice::Iter;
 use super::super::ParseError;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Modifier {
-    Transient,
-    Volatile,
-    Public,
-    Protected,
-    Private,
-    Abstract,
-    Static,
-    Final,
-    Synchronized,
-    Native,
-    Strictfp,
-}
+use java_model::*;
 
 /// Returns Some if modifier detected - None if no modifier or EOF
 pub fn try_parse_modifier<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Option<Modifier> {

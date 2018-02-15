@@ -1,21 +1,18 @@
 //! A parser to parse the declarations of a source file - class / enum / inner class / enum etc.
 
-use super::class::{Class, parse_class};
+use super::class::{parse_class};
 use super::helper::try_parse_modifier;
 use super::ParseError;
 use lexer::{TokenType, Token};
+use java_model::*;
 
 use std::slice::Iter;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Declaration<'a> {
-    Class(Class<'a>),
-}
 
 /// Given a token stream, parse all the top level declarations & return them
 pub fn parse_top_level_declarations<'a>(
     tok_stream: &mut Iter<'a, Token<'a>>,
 ) -> Result<Vec<Declaration<'a>>, ParseError> {
+    println!("Hello");
     let mut declarations = Vec::new();
 
     loop {

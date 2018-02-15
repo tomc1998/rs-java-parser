@@ -2,6 +2,7 @@
 #[cfg(feature = "bench")]
 extern crate test;
 extern crate regex;
+extern crate java_model;
 
 pub mod lexer;
 pub mod parser;
