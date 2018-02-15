@@ -101,8 +101,7 @@ impl<'a> LexedSourceFolder<'a> {
 mod tests {
     use super::SourceFolder;
     use lexer::TokenType;
-
-    use parser::declarations::Declaration;
+    use java_model::*;
 
     #[test]
     fn test_source_is_read() {

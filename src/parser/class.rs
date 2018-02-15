@@ -57,7 +57,7 @@ fn parse_class_member<'a>(
             "Expected identifier, got ".to_owned() + tok.val,
         ));
     }
-    let member_java_type = tok.val;
+    let _member_java_type = tok.val;
 
     // This will be the member name
     let tok = try!(tok_stream.next().ok_or(ParseError::new(
@@ -191,8 +191,8 @@ pub fn parse_class<'a>(tok_stream: &mut Iter<'a, Token<'a>>) -> Result<Class<'a>
 #[cfg(test)]
 mod tests {
     use super::parse_class;
-    use super::helper::Modifier;
     use lexer::lex_str;
+    use java_model::*;
 
     #[test]
     fn test_class_parse() {
