@@ -68,9 +68,8 @@ pub fn parse_top_level_declarations<'a>(
 #[cfg(test)]
 mod tests {
     use lexer::lex_str;
-    use parser::class::MemberType;
-    use parser::helper::Modifier;
-    use super::{parse_top_level_declarations, Declaration};
+    use super::{parse_top_level_declarations};
+    use java_model::*;
 
     #[test]
     fn test() {
