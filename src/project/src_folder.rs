@@ -4,10 +4,7 @@ use std;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::convert::AsRef;
-use lexer::{Token, TokenType, lex_str};
-use parser::declarations::{parse_top_level_declarations};
-use parser::ParseError;
-use java_model::*;
+use lexer::{Token, TokenType, lex, LexErr};
 
 /// A list of sources, which can be lexed to produce a LexedSourceFolder (maintaining a borrow on
 /// this struct)
@@ -19,7 +16,7 @@ pub struct SourceFolder {
 /// Contains a list of lexed tokens mapped to file names, and a list of child directories.
 pub struct LexedSourceFolder<'a> {
     /// A list of token lists paired with file paths
-    pub token_lists: Vec<(Vec<Token<'a>>, &'a Path)>,
+    pub token_lists: Vec<(Vec<Token>, &'a Path)>,
 }
 
 impl SourceFolder {
@@ -54,14 +51,14 @@ impl SourceFolder {
         return Ok(source_folder);
     }
 
-    pub fn lex<'a>(&'a self) -> LexedSourceFolder<'a> {
+    pub fn lex<'a>(&'a self) -> Result<LexedSourceFolder<'a>, LexErr> {
         let mut lexed = LexedSourceFolder { token_lists: Vec::new() };
 
         for &(ref s, ref p) in &self.source_lists {
-            lexed.token_lists.push((lex_str(&s), p.as_path()));
+            lexed.token_lists.push((lex(&s, p.to_str().unwrap())?, p.as_path()));
         }
 
-        return lexed;
+        return Ok(lexed);
     }
 }
 
@@ -83,25 +80,12 @@ impl<'a> LexedSourceFolder<'a> {
             }
         }
     }
-
-    /// Parse all the type declarations in this source folder
-    pub fn parse_declarations(&'a self) -> Result<Vec<Declaration>, ParseError> {
-        let mut declarations = Vec::new();
-        for &(ref token_list, _) in &self.token_lists {
-            declarations.extend_from_slice(
-                &try!(parse_top_level_declarations(&mut token_list.iter()))[..],
-            );
-        }
-            println!("Hello");
-        return Ok(declarations);
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::SourceFolder;
     use lexer::TokenType;
-    use java_model::*;
 
     #[test]
     fn test_source_is_read() {
@@ -122,7 +106,7 @@ mod tests {
     fn test_source_is_all_lexed() {
         let source_folder =
             SourceFolder::read("res/test-src").expect("Source folder failed to read");
-        let lexed = source_folder.lex();
+        let lexed = source_folder.lex().expect("Lex failed");
         for &(ref tokens, ref p) in &lexed.token_lists {
             if p.file_name().unwrap() == "Main.java" {
                 assert!(tokens.iter().any(|t| {
@@ -148,25 +132,6 @@ mod tests {
         for &(ref token_list, _) in &lexed.token_lists {
             for t in token_list {
                 assert_ne!(t.token_type, TokenType::Comment);
-            }
-        }
-    }
-
-    #[test]
-    fn test_parse_declarations() {
-        let source_folder =
-            SourceFolder::read("res/test-src").expect("Source folder failed to read");
-        let mut lexed = source_folder.lex();
-        lexed.strip_comments();
-        let declarations = lexed.parse_declarations().expect(
-            "Failed to parse declarations",
-        );
-
-        assert_eq!(declarations.len(), 4);
-
-        match &declarations[0] {
-            &Declaration::Class(ref c) => {
-                assert_eq!(c.name, "Main");
             }
         }
     }
