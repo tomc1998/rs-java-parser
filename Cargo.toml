@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
 
 [dependencies]
-regex = "0.2"
 java-model = { git = "https://github.com/tomc1998/rs-java-model" }
 
 [profile.dev]
