@@ -4,7 +4,7 @@ pub struct Point(pub usize);
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
 pub enum TokenType {
-    Ident, Punc, Key, Op, NumLit, StringLit, BoolLit, CoreType, Comment
+    Ident, Punc, Key, Op, NumLit, StringLit, BoolLit, Comment
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
@@ -35,9 +35,6 @@ impl<'a> Token {
     }
     pub fn new_bool_lit(start: usize, end: usize) -> Token {
         Token { start: Point(start), end: Point(end), token_type: TokenType::BoolLit }
-    }
-    pub fn new_core_type(start: usize, end: usize) -> Token {
-        Token { start: Point(start), end: Point(end), token_type: TokenType::CoreType }
     }
     pub fn new_comment(start: usize, end: usize) -> Token {
         Token { start: Point(start), end: Point(end), token_type: TokenType::Comment }

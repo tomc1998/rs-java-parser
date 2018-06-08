@@ -6,8 +6,56 @@ pub use self::error::LexErr;
 
 use std::str::CharIndices;
 
+#[inline]
+pub fn try_comment(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
+    let mut clone = cix.clone();
+    let (start, c) = clone.next().unwrap();
+    match c {
+        '/' => match clone.next() {
+            // /* style comment
+            Some((_, '*')) => {
+                // Consume the //
+                cix.next().unwrap();
+                cix.next().unwrap();
+                let mut end = start + 3;
+                let mut found_asterisk = false;
+                // Now consume until */, using found_asterisk to remember if the
+                // last token was *
+                while let Some((ix, c)) = cix.next() {
+                    end = ix;
+                    if c == '*' {
+                        found_asterisk = true;
+                    } else if c == '/' && found_asterisk {
+                        break;
+                    } else {
+                        found_asterisk = false;
+                    }
+                }
+                Ok(Some(Token::new_comment(start, end)))
+            }
+            // // style comment
+            Some((_, '/')) => {
+                // Consume the //
+                cix.next().unwrap();
+                cix.next().unwrap();
+                let mut end = start + 3;
+                // Now consume until \n or EOF
+                while let Some((ix, c)) = cix.clone().next() {
+                    end = ix;
+                    if c == '\n' { break; }
+                    cix.next().unwrap();
+                }
+                Ok(Some(Token::new_comment(start, end)))
+            }
+            _ => Ok(None),
+        }
+        _ => Ok(None),
+    }
+}
+
 /// Checks if s starts with a punctuation char. All punc is just 1 char in this
 /// lang, so just consume 1 char if a punc is found.
+#[inline]
 pub fn try_punc(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     let mut clone = cix.clone();
     let (ix, c) = clone.next().unwrap();
@@ -38,6 +86,7 @@ pub fn try_punc(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     }
 }
 
+#[inline]
 pub fn try_op(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     let mut clone = cix.clone();
     let (ix, c) = clone.next().unwrap();
@@ -96,6 +145,7 @@ pub fn try_op(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     Ok(Some(tok))
 }
 
+#[inline]
 pub fn try_key(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     const KEYS : [&str; 50] =
         ["abstract", "continue", "for", "new", "switch", "assert", "default",
@@ -121,6 +171,7 @@ pub fn try_key(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     Ok(None)
 }
 
+#[inline]
 pub fn try_string_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     if cix.clone().next().unwrap().1 == '"' {
         let (start, _) = cix.next().unwrap();
@@ -146,6 +197,7 @@ pub fn try_string_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     } else { Ok(None) }
 }
 
+#[inline]
 pub fn try_num_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     let mut clone = cix.clone();
     let (start, first) = clone.next().unwrap();
@@ -173,29 +225,7 @@ pub fn try_num_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     } else { Ok(None) }
 }
 
-pub fn try_core_type(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
-    let start = cix.clone().next().unwrap().0;
-    let as_str = cix.as_str();
-    if let Some((tok, to_consume)) = if as_str.starts_with("string") {
-        let len = "string".len();
-        Some((Token::new_core_type(start, start + len), len))
-    } else if as_str.starts_with("float") {
-        let len = "float".len();
-        Some((Token::new_core_type(start, start + len), len))
-    } else if as_str.starts_with("bool") {
-        let len = "bool".len();
-        Some((Token::new_core_type(start, start + len), len))
-    } else if as_str.starts_with("int") {
-        let len = "int".len();
-        Some((Token::new_core_type(start, start + len), len))
-    } else { None } {
-        for _ in 0..to_consume { cix.next(); }
-        Ok(Some(tok))
-    } else {
-        Ok(None)
-    }
-}
-
+#[inline]
 pub fn try_bool_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     let start = cix.clone().next().unwrap().0;
     let as_str = cix.as_str();
@@ -213,6 +243,7 @@ pub fn try_bool_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     }
 }
 
+#[inline]
 pub fn try_ident(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     let mut clone = cix.clone();
     let (start, first) = clone.next().unwrap();
@@ -232,15 +263,15 @@ pub fn try_ident(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
 }
 
 pub fn lex_token(cix: &mut CharIndices) -> Result<Token, LexErr> {
-    if let Some(tok) = try_op(cix)? {
+    if let Some(tok) = try_comment(cix)? {
+        Ok(tok)
+    } else if let Some(tok) = try_op(cix)? {
         Ok(tok)
     } else if let Some(tok) = try_punc(cix)? {
         Ok(tok)
     } else if let Some(tok) = try_num_lit(cix)? {
         Ok(tok)
     } else if let Some(tok) = try_bool_lit(cix)? {
-        Ok(tok)
-    } else if let Some(tok) = try_core_type(cix)? {
         Ok(tok)
     } else if let Some(tok) = try_key(cix)? {
         Ok(tok)
@@ -322,6 +353,8 @@ mod benches {
         package com.tom.test;
         public class Main {
             public static void main(String[] args) {
+                // Hello, this is a // style comment
+                /* Hello, this is a /* style comment */
                 float a = 3.f;
                 float b = .2f;
                 float c = a + b;
