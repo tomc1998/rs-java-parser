@@ -2,9 +2,10 @@ use lexer::Token;
 
 mod error;
 mod node;
+mod util;
 mod identifier;
 mod import;
-mod util;
+mod type_parameters;
 
 pub use self::error::*;
 pub use self::node::*;
