@@ -26,6 +26,7 @@ pub fn try_comment(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
                     if c == '*' {
                         found_asterisk = true;
                     } else if c == '/' && found_asterisk {
+                        end += 1;
                         break;
                     } else {
                         found_asterisk = false;
@@ -323,8 +324,8 @@ mod test {
     fn test_lex() {
         let src = std::str::from_utf8(include_bytes!("../../res/test-src/com/tom/Main.java"))
             .unwrap();
-        let res = super::lex(src, "com/tom/Main.java");
-        assert!(res.unwrap().len() > 0);
+        let res = super::lex(src, "com/tom/Main.java").unwrap();
+        assert!(res.len() > 0);
     }
 
     #[test]
