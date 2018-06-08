@@ -164,7 +164,7 @@ pub fn try_key(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
                     for _ in 0..k.len() { cix.next(); } // Consume
                     Ok(Some(Token::new_key(start, start + k.len())))
                 }
-                Some((_, c)) if c.is_alphanumeric() => {
+                Some((_, c)) if !c.is_alphanumeric() => {
                     for _ in 0..k.len() { cix.next(); } // Consume
                     Ok(Some(Token::new_key(start, start + k.len())))
                 }
