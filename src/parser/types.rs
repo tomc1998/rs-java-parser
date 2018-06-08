@@ -64,9 +64,18 @@ pub fn parse_type_argument(tokens: &mut TokenIter, src: &str) -> ParseRes {
           }))
 }
 
-pub fn parse_type_arguments(tokens: &mut TokenIter, src: &str) -> ParseRes {
-    assert_term(tokens, src, "<")?;
-    let mut children = vec![parse_type_argument(tokens, src)?];
+#[allow(dead_code)]
+pub fn parse_type_arguments_or_diamond(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![assert_term(tokens, src, "<")?];
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == ">" => {
+            children.push(term(*tokens.next().unwrap()));
+            return Ok(nterm(NTermType::TypeArgumentsOrDiamond, children));
+        }
+        _ => ()
+    }
+
+    children.push(parse_type_argument(tokens, src)?);
     while let Some(tok) = tokens.clone().next() {
         if tok.val(src) == "," {
             tokens.next(); // Skip ','
@@ -75,7 +84,23 @@ pub fn parse_type_arguments(tokens: &mut TokenIter, src: &str) -> ParseRes {
             break;
         }
     }
-    assert_term(tokens, src, ">")?;
+    children.push(assert_term(tokens, src, ">")?);
+
+    Ok(nterm(NTermType::TypeArgumentsOrDiamond, children))
+}
+
+pub fn parse_type_arguments(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![assert_term(tokens, src, "<")?,
+                            parse_type_argument(tokens, src)?];
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "," {
+            tokens.next(); // Skip ','
+            children.push(parse_type_argument(tokens, src)?);
+        } else {
+            break;
+        }
+    }
+    children.push(assert_term(tokens, src, ">")?);
     Ok(nterm(NTermType::TypeArguments, children))
 }
 
@@ -142,6 +167,10 @@ mod tests {
     fn test_parse_type_arguments() {
         let src = "<T<Foo>.Bar, N<MyVar>, ? extends X>";
         let node = parse_type_arguments(&mut lex(src, "").unwrap().iter(), src).unwrap();
-        assert_eq!(node.children.len(), 3);
+        assert_eq!(node.children.len(), 5);
+
+        let src = "<>";
+        let node = parse_type_arguments_or_diamond(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 2);
     }
 }
