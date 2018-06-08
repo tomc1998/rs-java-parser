@@ -335,9 +335,11 @@ mod test {
             "*=", "-=", "+=", ">>", "<<", "--", "++", "||", "&&", "!=",
             "<=", ">=", "==", "->", "%", "^", "|", "&", "/", "*", "-", "+",
             ":", "?", "~", "!", "<", "=", ">"].len();
-        let ops = ">>>=\n>>=\n<<=\n>>>\n%=\n^=\n=\n&=\n/=\n\n*=\n-=\n+=\n>>\n<<\n--\n++\n||\n&&\n!=\n\n<=\n>=\n==\n->\n%\n^\n|\n&\n/\n*\n-\n+\n\n:\n?\n~\n!\n<\n=\n>";
+        let ops = ">>>=\n>>=\n<<=\n>>>\n%=\n^=\n=\n&=\n/=\n\n*=\n-=\n+=\n>>\n<<".to_owned()
+            + "\n--\n++\n||\n&&\n!=\n\n<=\n>=\n==\n->\n%\n^\n|\n&\n/\n*\n-\n+"
+            + "\n\n:\n?\n~\n!\n<\n=\n>";
 
-        let tokens = super::lex(ops, "").unwrap();
+        let tokens = super::lex(&ops, "").unwrap();
         assert_eq!(tokens.len(), num_ops);
         assert!(tokens.iter().all(|t| t.token_type == super::TokenType::Op));
     }
