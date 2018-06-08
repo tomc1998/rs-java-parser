@@ -1,22 +1,22 @@
-use lexer::{Token, TokenType};
+use lexer::Token;
 
 mod error;
 mod node;
 mod identifier;
+mod import;
+mod util;
 
 pub use self::error::*;
 pub use self::node::*;
-
-use self::identifier::*;
 
 use std;
 
 type TokenIter<'a> = std::slice::Iter<'a, Token>;
 type ParseRes = Result<Node, ParseErr>;
 
-fn parse_compilation_unit(tokens: &mut TokenIter, src: &str) -> ParseRes {
+fn parse_compilation_unit(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
     // Check if this is a control or stmt
-    let mut children = Vec::new();
+    let children = Vec::new();
     Ok(Node {
         node_type: NodeType::NTerm(NTermType::CompilationUnit),
         children: children

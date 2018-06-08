@@ -1,7 +1,7 @@
 //! Parsing for identifiers
 
 use super::*;
-use lexer::{Token, TokenType};
+use lexer::TokenType;
 
 /// A qualified identifier is just a node that contains a list of identifiers.
 /// The '.' separating the idents are stripped.
@@ -18,6 +18,7 @@ pub fn parse_qualified_identifier(tokens: &mut TokenIter, src: &str) -> ParseRes
     Ok(nterm(NTermType::QualifiedIdentifier, children))
 }
 
+#[allow(dead_code)]
 pub fn parse_qualified_identifier_list(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let mut children = vec![parse_qualified_identifier(tokens, src)?];
     while let Some(tok) = tokens.clone().next() {
