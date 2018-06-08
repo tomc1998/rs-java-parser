@@ -4,5 +4,6 @@ extern crate test;
 extern crate java_model;
 
 pub mod lexer;
+pub mod parser;
 //pub mod project;
 
