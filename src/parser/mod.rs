@@ -2,9 +2,12 @@ use lexer::{Token, TokenType};
 
 mod error;
 mod node;
+mod identifier;
 
 pub use self::error::*;
 pub use self::node::*;
+
+use self::identifier::*;
 
 use std;
 

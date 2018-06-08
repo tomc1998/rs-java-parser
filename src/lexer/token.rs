@@ -40,7 +40,7 @@ impl<'a> Token {
         Token { start: Point(start), end: Point(end), token_type: TokenType::Comment }
     }
 
-    pub fn val(&'a self, src: &'a str) -> &'a str {
+    pub fn val(&self, src: &'a str) -> &'a str {
         unsafe {
             src.slice_unchecked(self.start.0, self.end.0)
         }

@@ -55,17 +55,34 @@ pub struct Node {
     pub children: Vec<Node>
 }
 
+impl<'a> Node {
+    /// Returns the value of this node, or None if this node isn't a terminal.
+    pub fn val(&self, src: &'a str) -> Option<&'a str>{
+        match self.node_type {
+            NodeType::Term(t) => Some(t.val(src)),
+            _ => None
+        }
+    }
+}
+
 /// Helper function to create a terminal from a token
-fn term(tok: Token) -> Node {
+pub fn term(tok: Token) -> Node {
     Node {
         node_type: NodeType::Term(tok),
         children: Vec::new(),
     }
 }
 
+pub fn nterm(n_term_type: NTermType, children: Vec<Node>) -> Node {
+    Node {
+        node_type: NodeType::NTerm(n_term_type),
+        children: children,
+    }
+}
+
 /// Returns the first token as a terminal given that its value matches the given
 /// string. Consumes the token if it matches.
-fn assert_term(tokens: &mut TokenIter, src: &str, expected: &str) -> ParseRes {
+pub fn assert_term(tokens: &mut TokenIter, src: &str, expected: &str) -> ParseRes {
     let tok = tokens.clone().next();
     match tok {
         Some(tok) => if tok.val(src) == expected {
@@ -79,7 +96,7 @@ fn assert_term(tokens: &mut TokenIter, src: &str, expected: &str) -> ParseRes {
 
 /// Returns the first token as a terminal given that its value matches the given
 /// string. Consumes the token if it matches.
-fn assert_term_with_type(tokens: &mut TokenIter, expected: TokenType) -> ParseRes {
+pub fn assert_term_with_type(tokens: &mut TokenIter, expected: TokenType) -> ParseRes {
     let tok = tokens.clone().next();
     match tok {
         Some(tok) => if tok.token_type == expected {
