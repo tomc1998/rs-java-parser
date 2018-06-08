@@ -1,7 +1,29 @@
 use super::*;
 use lexer::TokenType;
 
-pub fn parse_reference_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
+#[allow(dead_code)]
+fn parse_basic_type(tokens: &mut TokenIter, _src: &str) -> ParseRes {
+    Ok(nterm(NTermType::BasicType, vec![term(*tokens.next().unwrap())]))
+}
+
+#[allow(dead_code)]
+pub fn parse_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let children = match tokens.clone().next().ok_or(
+        ParseErr::Raw("Unexpected EOF, expected type".to_owned()))? {
+        tok if tok.val(src) == "byte" ||
+            tok.val(src) == "int" ||
+            tok.val(src) == "short" ||
+            tok.val(src) == "char" ||
+            tok.val(src) == "long" ||
+            tok.val(src) == "float" ||
+            tok.val(src) == "double" ||
+            tok.val(src) == "boolean" => vec![parse_basic_type(tokens, src)?],
+        _ => vec![parse_reference_type(tokens, src)?],
+    };
+    Ok(nterm(NTermType::Type, children))
+}
+
+fn parse_reference_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let mut children = vec![assert_term_with_type(tokens, TokenType::Ident)?];
     if is_type_args_next(tokens, src) {
         children.push(parse_type_arguments(tokens, src)?);
@@ -62,6 +84,25 @@ mod tests {
     use lexer::lex;
     use super::*;
     use super::node::NTermType;
+
+    #[test]
+    fn test_parse_type() {
+        let src = "boolean";
+        let node = parse_type(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 1);
+        match node.children[0].node_type {
+            NodeType::NTerm(NTermType::BasicType) => (),
+            ref t => panic!("Incorrect nterm type: {:?}", t),
+        }
+
+        let src = "SomeReferenceType";
+        let node = parse_type(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 1);
+        match node.children[0].node_type {
+            NodeType::NTerm(NTermType::ReferenceType) => (),
+            ref t => panic!("Incorrect nterm type: {:?}", t),
+        }
+    }
 
     #[test]
     fn test_parse_type_argument() {

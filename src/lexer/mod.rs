@@ -148,6 +148,7 @@ pub fn try_op(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
 
 #[inline]
 pub fn try_key(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
+    let (start, _) = cix.clone().next().unwrap();
     const KEYS : [&str; 50] =
         ["abstract", "continue", "for", "new", "switch", "assert", "default",
          "goto", "package", "synchronized", "boolean", "do", "if", "private", "this",
@@ -159,12 +160,16 @@ pub fn try_key(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     for k in KEYS.iter() {
         if cix.as_str().starts_with(k) {
             return match cix.clone().skip(k.len()).next() {
-                None => Err(LexErr::Raw(format!("Unexpected EOF after `if`"))),
-                Some((end, c)) => {
-                    if c.is_whitespace() || c == '(' {
-                        for _ in 0..k.len() { cix.next(); } // Consume the 'if'
-                        Ok(Some(Token::new_key(end - k.len(), end)))
-                    } else { Ok(None) }
+                None => {
+                    for _ in 0..k.len() { cix.next(); } // Consume
+                    Ok(Some(Token::new_key(start, start + k.len())))
+                }
+                Some((_, c)) if c.is_alphanumeric() => {
+                    for _ in 0..k.len() { cix.next(); } // Consume
+                    Ok(Some(Token::new_key(start, start + k.len())))
+                }
+                _ => {
+                    Ok(None)
                 }
             }
         }

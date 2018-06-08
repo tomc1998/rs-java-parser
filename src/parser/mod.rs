@@ -5,7 +5,7 @@ mod node;
 mod util;
 mod identifier;
 mod import;
-mod type_parameters;
+mod types;
 
 pub use self::error::*;
 pub use self::node::*;
