@@ -127,6 +127,20 @@ pub fn parse_type_list(tokens: &mut TokenIter, src: &str) -> ParseRes {
     Ok(nterm(NTermType::TypeList, children))
 }
 
+#[allow(dead_code)]
+pub fn parse_bound(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![parse_reference_type(tokens, src)?];
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "&" {
+            tokens.next(); // Skip '&'
+            children.push(parse_reference_type(tokens, src)?);
+        } else {
+            break;
+        }
+    }
+    Ok(nterm(NTermType::Bound, children))
+}
+
 #[cfg(test)]
 mod tests {
     use lexer::lex;
@@ -214,5 +228,12 @@ mod tests {
         let node = parse_non_wildcard_type_arguments_or_diamond(&mut lex(src, "").unwrap().iter(),
                                                                src).unwrap();
         assert_eq!(node.children.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_bound() {
+        let src = "SomeClass1 & SomeClass2 & SomeClass3";
+        let node = parse_bound(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
     }
 }
