@@ -65,28 +65,11 @@ pub fn parse_type_argument(tokens: &mut TokenIter, src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
-pub fn parse_type_arguments_or_diamond(tokens: &mut TokenIter, src: &str) -> ParseRes {
-    let mut children = vec![assert_term(tokens, src, "<")?];
-    match tokens.clone().next() {
-        Some(tok) if tok.val(src) == ">" => {
-            children.push(term(*tokens.next().unwrap()));
-            return Ok(nterm(NTermType::TypeArgumentsOrDiamond, children));
-        }
-        _ => ()
-    }
-
-    children.push(parse_type_argument(tokens, src)?);
-    while let Some(tok) = tokens.clone().next() {
-        if tok.val(src) == "," {
-            tokens.next(); // Skip ','
-            children.push(parse_type_argument(tokens, src)?);
-        } else {
-            break;
-        }
-    }
-    children.push(assert_term(tokens, src, ">")?);
-
-    Ok(nterm(NTermType::TypeArgumentsOrDiamond, children))
+pub fn parse_non_wildcard_type_arguments(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    Ok(nterm(NTermType::TypeArguments,
+             vec![assert_term(tokens, src, "<")?,
+                  parse_type_list(tokens, src)?,
+                  assert_term(tokens, src, ">")?]))
 }
 
 pub fn parse_type_arguments(tokens: &mut TokenIter, src: &str) -> ParseRes {
@@ -102,6 +85,46 @@ pub fn parse_type_arguments(tokens: &mut TokenIter, src: &str) -> ParseRes {
     }
     children.push(assert_term(tokens, src, ">")?);
     Ok(nterm(NTermType::TypeArguments, children))
+}
+
+#[allow(dead_code)]
+pub fn parse_non_wildcard_type_arguments_or_diamond(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut clone = tokens.clone();
+    Ok(nterm(NTermType::NonWildcardTypeArgumentsOrDiamond, match clone.next() {
+        Some(tok) if tok.val(src) == "<" => match clone.next() {
+            Some(tok) if tok.val(src) == ">" => vec![term(*tokens.next().unwrap()),
+                                                     term(*tokens.next().unwrap())],
+            _ => vec![parse_non_wildcard_type_arguments(tokens, src)?]
+        }
+        _ => vec![parse_non_wildcard_type_arguments(tokens, src)?],
+    }))
+}
+
+#[allow(dead_code)]
+pub fn parse_type_arguments_or_diamond(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut clone = tokens.clone();
+    Ok(nterm(NTermType::TypeArgumentsOrDiamond, match clone.next() {
+        Some(tok) if tok.val(src) == "<" => match clone.next() {
+            Some(tok) if tok.val(src) == ">" => vec![term(*tokens.next().unwrap()),
+                                                     term(*tokens.next().unwrap())],
+            _ => vec![parse_type_arguments(tokens, src)?]
+        }
+        _ => vec![parse_type_arguments(tokens, src)?],
+    }))
+}
+
+#[allow(dead_code)]
+pub fn parse_type_list(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![parse_reference_type(tokens, src)?];
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "," {
+            tokens.next(); // Skip ','
+            children.push(parse_reference_type(tokens, src)?);
+        } else {
+            break;
+        }
+    }
+    Ok(nterm(NTermType::TypeList, children))
 }
 
 #[cfg(test)]
@@ -171,6 +194,25 @@ mod tests {
 
         let src = "<>";
         let node = parse_type_arguments_or_diamond(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_type_list() {
+        let src = "U<Foo>, V<Bar>, MyClass";
+        let node = parse_type_list(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
+    }
+
+    #[test]
+    fn test_parse_non_wildcard_type_arguments() {
+        let src = "<U<Foo>, V<Bar>, MyClass>";
+        let node = parse_non_wildcard_type_arguments(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
+
+        let src = "<>";
+        let node = parse_non_wildcard_type_arguments_or_diamond(&mut lex(src, "").unwrap().iter(),
+                                                               src).unwrap();
         assert_eq!(node.children.len(), 2);
     }
 }
