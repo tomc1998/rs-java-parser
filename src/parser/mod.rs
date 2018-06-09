@@ -3,8 +3,10 @@ use lexer::Token;
 mod error;
 mod node;
 mod util;
-mod identifier;
-mod import;
+mod identifiers;
+mod modifiers;
+mod annotations;
+mod imports;
 mod types;
 
 pub use self::error::*;

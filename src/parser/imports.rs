@@ -1,6 +1,6 @@
 use super::*;
 use super::util::consume_maybe;
-use super::identifier::parse_qualified_identifier;
+use super::identifiers::parse_qualified_identifier;
 use lexer::TokenType;
 
 #[allow(dead_code)]
