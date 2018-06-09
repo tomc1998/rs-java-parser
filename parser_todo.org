@@ -114,10 +114,10 @@
     volatile
     strictfp
 
-** TODO Annotations:
+** DONE Annotations:
     Annotation {Annotation}
 
-** TODO Annotation:
+** DONE Annotation:
     @ QualifiedIdentifier [ ( [AnnotationElement] ) ]
 
 ** TODO AnnotationElement:
