@@ -258,7 +258,7 @@ pub fn try_ident(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
         let mut num_consumed = 1;
         let mut end = start + 1;
         while let Some((ix, c)) = clone.next() {
-            if !c.is_alphanumeric() { break; }
+            if !(c.is_alphanumeric() || c == '_') { break; }
             num_consumed += 1;
             end = ix + 1;
         }
