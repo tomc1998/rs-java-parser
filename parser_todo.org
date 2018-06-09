@@ -1,0 +1,551 @@
+* Identifiers
+** DONE Identifier:
+    IDENTIFIER
+
+** DONE QualifiedIdentifier:
+    Identifier { . Identifier }
+
+** DONE QualifiedIdentifierList: 
+    QualifiedIdentifier { , QualifiedIdentifier }
+
+
+* Compilation unit
+** TODO CompilationUnit: 
+    [[Annotations] package QualifiedIdentifier ;]
+                                {ImportDeclaration} {TypeDeclaration}
+
+** TODO ImportDeclaration: 
+    import [static] Identifier { . Identifier } [. *] ;
+
+** TODO TypeDeclaration: 
+    ClassOrInterfaceDeclaration
+    ;
+
+** TODO ClassOrInterfaceDeclaration: 
+    {Modifier} (ClassDeclaration | InterfaceDeclaration)
+
+** TODO ClassDeclaration: 
+    NormalClassDeclaration
+    EnumDeclaration
+
+** TODO InterfaceDeclaration: 
+    NormalInterfaceDeclaration
+    AnnotationTypeDeclaration
+
+
+
+** TODO NormalClassDeclaration: 
+    class Identifier [TypeParameters]
+                                [extends Type] [implements TypeList] ClassBody
+
+** TODO EnumDeclaration:
+    enum Identifier [implements TypeList] EnumBody
+
+** TODO NormalInterfaceDeclaration: 
+    interface Identifier [TypeParameters] [extends TypeList] InterfaceBody
+
+** TODO AnnotationTypeDeclaration:
+    @ interface Identifier AnnotationTypeBody
+
+
+* Types
+** DONE Type:
+    BasicType {[]}
+    ReferenceType  {[]}
+
+** DONE BasicType: 
+    byte
+    short
+    char
+    int
+    long
+    float
+    double
+    boolean
+
+** DONE ReferenceType:
+    Identifier [TypeArguments] { . Identifier [TypeArguments] }
+
+** DONE TypeArguments: 
+    < TypeArgument { , TypeArgument } >
+
+** DONE TypeArgument:  
+    ReferenceType
+    ? [ (extends | super) ReferenceType ]
+
+** DONE NonWildcardTypeArguments:
+    < TypeList >
+
+** DONE TypeList:  
+    ReferenceType { , ReferenceType }
+
+
+** DONE TypeArgumentsOrDiamond:
+    < > 
+    TypeArguments
+
+** DONE NonWildcardTypeArgumentsOrDiamond:
+    < >
+    NonWildcardTypeArguments
+
+
+** DONE TypeParameters:
+    < TypeParameter { , TypeParameter } >
+
+** DONE TypeParameter:
+    Identifier [extends Bound]
+
+** TODO Bound:  
+    ReferenceType { & ReferenceType }
+
+
+* Modifiers / annotations
+** TODO Modifier: 
+    Annotation
+    public
+    protected
+    private
+    static 
+    abstract
+    final
+    native
+    synchronized
+    transient
+    volatile
+    strictfp
+
+** TODO Annotations:
+    Annotation {Annotation}
+
+** TODO Annotation:
+    @ QualifiedIdentifier [ ( [AnnotationElement] ) ]
+
+** TODO AnnotationElement:
+    ElementValuePairs
+    ElementValue
+
+** TODO ElementValuePairs:
+    ElementValuePair { , ElementValuePair }
+
+** TODO ElementValuePair:
+    Identifier = ElementValue
+    
+** TODO ElementValue:
+    Annotation
+    Expression1 
+    ElementValueArrayInitializer
+
+** TODO ElementValueArrayInitializer:
+    { [ElementValues] [,] }
+
+** TODO ElementValues:
+    ElementValue { , ElementValue }
+
+    
+* Classes
+** TODO ClassBody: 
+    { { ClassBodyDeclaration } }
+
+** TODO ClassBodyDeclaration:
+    ; 
+    {Modifier} MemberDecl
+    [static] Block
+
+** TODO MemberDecl:
+    MethodOrFieldDecl
+    void Identifier VoidMethodDeclaratorRest
+    Identifier ConstructorDeclaratorRest
+    GenericMethodOrConstructorDecl
+    ClassDeclaration
+    InterfaceDeclaration
+
+** TODO MethodOrFieldDecl:
+    Type Identifier MethodOrFieldRest
+
+** TODO MethodOrFieldRest:  
+    FieldDeclaratorsRest ;
+    MethodDeclaratorRest
+
+** TODO FieldDeclaratorsRest:  
+    VariableDeclaratorRest { , VariableDeclarator }
+
+** TODO MethodDeclaratorRest:
+    FormalParameters {[]} [throws QualifiedIdentifierList] (Block | ;)
+
+** TODO VoidMethodDeclaratorRest:
+    FormalParameters [throws QualifiedIdentifierList] (Block | ;)
+
+** TODO ConstructorDeclaratorRest:
+    FormalParameters [throws QualifiedIdentifierList] Block
+
+** TODO GenericMethodOrConstructorDecl:
+    TypeParameters GenericMethodOrConstructorRest
+
+** TODO GenericMethodOrConstructorRest:
+    (Type | void) Identifier MethodDeclaratorRest
+    Identifier ConstructorDeclaratorRest
+
+    
+* Interfaces
+** TODO InterfaceBody: 
+    { { InterfaceBodyDeclaration } }
+
+** TODO InterfaceBodyDeclaration:
+    ; 
+    {Modifier} InterfaceMemberDecl
+
+** TODO InterfaceMemberDecl:
+    InterfaceMethodOrFieldDecl
+    void Identifier VoidInterfaceMethodDeclaratorRest
+    InterfaceGenericMethodDecl
+    ClassDeclaration
+    InterfaceDeclaration
+
+** TODO InterfaceMethodOrFieldDecl:
+    Type Identifier InterfaceMethodOrFieldRest
+
+** TODO InterfaceMethodOrFieldRest:
+    ConstantDeclaratorsRest ;
+    InterfaceMethodDeclaratorRest
+
+** TODO ConstantDeclaratorsRest: 
+    ConstantDeclaratorRest { , ConstantDeclarator }
+
+** TODO ConstantDeclaratorRest: 
+    {[]} = VariableInitializer
+
+** TODO ConstantDeclarator: 
+    Identifier ConstantDeclaratorRest
+
+** TODO InterfaceMethodDeclaratorRest:
+    FormalParameters {[]} [throws QualifiedIdentifierList] ; 
+
+** TODO VoidInterfaceMethodDeclaratorRest:
+    FormalParameters [throws QualifiedIdentifierList] ;  
+
+** TODO InterfaceGenericMethodDecl:
+    TypeParameters (Type | void) Identifier InterfaceMethodDeclaratorRest
+
+
+* Parameters
+** TODO FormalParameters: 
+    ( [FormalParameterDecls] )
+
+** TODO FormalParameterDecls: 
+    {VariableModifier}  Type FormalParameterDeclsRest
+
+** TODO VariableModifier:
+    final
+    Annotation
+
+** TODO FormalParameterDeclsRest: 
+    VariableDeclaratorId [, FormalParameterDecls]
+    ... VariableDeclaratorId
+
+
+
+* Variable declarations
+** TODO VariableDeclaratorId:
+    Identifier {[]}
+    // Example: int[][]
+
+** TODO VariableDeclarators:
+    VariableDeclarator { , VariableDeclarator }
+
+** TODO VariableDeclarator:
+    Identifier VariableDeclaratorRest
+
+** TODO VariableDeclaratorRest:
+    {[]} [ = VariableInitializer ]
+
+** TODO VariableInitializer:
+    ArrayInitializer
+    Expression
+
+** TODO ArrayInitializer:
+    { [ VariableInitializer { , VariableInitializer } [,] ] }
+
+
+* Blocks / statements
+** TODO Block: 
+    { BlockStatements }
+
+** TODO BlockStatements: 
+    { BlockStatement }
+
+** TODO BlockStatement:
+    LocalVariableDeclarationStatement
+    ClassOrInterfaceDeclaration
+    [Identifier :] Statement
+
+** TODO LocalVariableDeclarationStatement:
+    { VariableModifier }  Type VariableDeclarators ;
+
+** TODO Statement:
+    Block
+    ;
+    Identifier : Statement
+    StatementExpression ;
+    if ParExpression Statement [else Statement] 
+    assert Expression [: Expression] ;
+    switch ParExpression { SwitchBlockStatementGroups } 
+    while ParExpression Statement
+    do Statement while ParExpression ;
+    for ( ForControl ) Statement
+    break [Identifier] ;
+    continue [Identifier] ;
+    return [Expression] ;
+    throw Expression ;
+    synchronized ParExpression Block
+    try Block (Catches | [Catches] Finally)
+    try ResourceSpecification Block [Catches] [Finally]
+
+** TODO StatementExpression: 
+    Expression
+
+    
+* Try / catch
+** TODO Catches:
+    CatchClause { CatchClause }
+
+** TODO CatchClause:  
+    catch ( {VariableModifier} CatchType Identifier ) Block
+
+** TODO CatchType:
+    QualifiedIdentifier { | QualifiedIdentifier }
+
+** TODO Finally:
+    finally Block
+
+** TODO ResourceSpecification:
+    ( Resources [;] )
+
+** TODO Resources:
+    Resource { ; Resource }
+
+** TODO Resource:
+    {VariableModifier} ReferenceType VariableDeclaratorId = Expression 
+
+
+* Switches
+** TODO SwitchBlockStatementGroups: 
+    { SwitchBlockStatementGroup }
+
+** TODO SwitchBlockStatementGroup: 
+    SwitchLabels BlockStatements
+
+** TODO SwitchLabels:
+    SwitchLabel { SwitchLabel }
+
+** TODO SwitchLabel: 
+    case Expression :
+    case EnumConstantName :
+    default :
+
+** TODO EnumConstantName:
+    Identifier
+
+
+
+* For loops
+** TODO ForControl:
+    ForVarControl
+    ForInit ; [Expression] ; [ForUpdate]
+
+** TODO ForVarControl:
+    {VariableModifier} Type VariableDeclaratorId  ForVarControlRest
+
+** TODO ForVarControlRest:
+    ForVariableDeclaratorsRest ; [Expression] ; [ForUpdate]
+    : Expression
+
+** TODO ForVariableDeclaratorsRest:
+    [= VariableInitializer] { , VariableDeclarator }
+
+** TODO ForInit: 
+** TODO ForUpdate:
+    StatementExpression { , StatementExpression }    
+
+
+* Expressions
+** TODO Expression: 
+    Expression1 [AssignmentOperator Expression1]
+
+** TODO AssignmentOperator: 
+    = 
+    +=
+    -= 
+    *=
+    /=
+    &=
+    |=
+    ^=
+    %=
+    <<=
+    >>=
+    >>>=
+
+** TODO Expression1: 
+    Expression2 [Expression1Rest]
+
+** TODO Expression1Rest: 
+    ? Expression : Expression1
+
+** TODO Expression2:
+    Expression3 [Expression2Rest]
+
+** TODO Expression2Rest:
+    { InfixOp Expression3 }
+    instanceof Type
+
+
+* Operators
+** TODO InfixOp: 
+    || 
+    &&
+    |
+    ^
+    &
+    ==
+    !=
+    <
+    >
+    <=
+    >=
+    <<
+    >>
+    >>>
+    +
+    -
+    *
+    /
+    %
+
+** TODO Expression3: 
+    PrefixOp Expression3
+    ( (Expression | Type) ) Expression3
+    Primary { Selector } { PostfixOp }
+
+** TODO PrefixOp: 
+    ++
+    --
+    !
+    ~
+    +
+    -
+
+** TODO PostfixOp: 
+    ++
+    --
+
+
+* 'Atoms'
+** TODO Primary: 
+    Literal
+    ParExpression
+    this [Arguments]
+    super SuperSuffix
+    new Creator
+    NonWildcardTypeArguments (ExplicitGenericInvocationSuffix | this Arguments)
+    Identifier { . Identifier } [IdentifierSuffix]
+    BasicType {[]} . class
+    void . class
+** TODO Literal:
+    IntegerLiteral
+    FloatingPointLiteral
+    CharacterLiteral 
+    StringLiteral 
+    BooleanLiteral
+    NullLiteral
+
+** TODO ParExpression: 
+    ( Expression )
+
+** TODO Arguments:
+    ( [ Expression { , Expression } ] )
+
+** TODO SuperSuffix: 
+    Arguments 
+    . Identifier [Arguments]
+
+** TODO ExplicitGenericInvocationSuffix: 
+    super SuperSuffix
+    Identifier Arguments
+
+    
+* . access, & new exprs
+** TODO Creator:  
+    NonWildcardTypeArguments CreatedName ClassCreatorRest
+    CreatedName (ClassCreatorRest | ArrayCreatorRest)
+
+** TODO CreatedName:   
+    Identifier [TypeArgumentsOrDiamond] { . Identifier [TypeArgumentsOrDiamond] }
+
+** TODO ClassCreatorRest: 
+    Arguments [ClassBody]
+
+** TODO ArrayCreatorRest:
+    [ (] {[]} ArrayInitializer  |  Expression ] {[ Expression ]} {[]})
+
+
+** TODO IdentifierSuffix:
+    [ ({[]} . class | Expression) ]
+    Arguments 
+    . (class | ExplicitGenericInvocation | this | super Arguments |
+                                new [NonWildcardTypeArguments] InnerCreator)
+** TODO ExplicitGenericInvocation:
+    NonWildcardTypeArguments ExplicitGenericInvocationSuffix
+
+** TODO InnerCreator:  
+    Identifier [NonWildcardTypeArgumentsOrDiamond] ClassCreatorRest
+
+
+** TODO Selector:
+    . Identifier [Arguments]
+    . ExplicitGenericInvocation
+    . this
+    . super SuperSuffix
+    . new [NonWildcardTypeArguments] InnerCreator
+    [ Expression ]
+
+
+* Enums
+** TODO EnumBody:
+    { [EnumConstants] [,] [EnumBodyDeclarations] }
+
+** TODO EnumConstants:
+    EnumConstant
+    EnumConstants , EnumConstant
+
+** TODO EnumConstant:
+    [Annotations] Identifier [Arguments] [ClassBody]
+
+** TODO EnumBodyDeclarations:
+    ; {ClassBodyDeclaration}
+
+
+    
+* Annotation declarations
+** TODO AnnotationTypeBody:
+    { [AnnotationTypeElementDeclarations] }
+
+** TODO AnnotationTypeElementDeclarations:
+    AnnotationTypeElementDeclaration
+    AnnotationTypeElementDeclarations AnnotationTypeElementDeclaration
+
+** TODO AnnotationTypeElementDeclaration:
+    {Modifier} AnnotationTypeElementRest
+
+** TODO AnnotationTypeElementRest:
+    Type Identifier AnnotationMethodOrConstantRest ;
+    ClassDeclaration
+    InterfaceDeclaration
+    EnumDeclaration  
+    AnnotationTypeDeclaration
+
+** TODO AnnotationMethodOrConstantRest:
+    AnnotationMethodRest
+    ConstantDeclaratorsRest  
+
+** TODO AnnotationMethodRest:
+    ( ) [[]] [default ElementValue]
