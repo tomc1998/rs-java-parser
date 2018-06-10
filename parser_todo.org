@@ -367,11 +367,11 @@
     StatementExpression { , StatementExpression }    
 
     
-* TODO Expressions / Operators
-** TODO Expression: 
+* DONE Expressions / Operators
+** DONE Expression: 
     Expression1 [AssignmentOperator Expression1]
 
-** TODO AssignmentOperator: 
+** DONE AssignmentOperator: 
     = 
     +=
     -= 
@@ -385,10 +385,10 @@
     >>=
     >>>=
 
-** TODO Expression1: 
+** DONE Expression1: 
     Expression2 [Expression1Rest]
 
-** TODO Expression1Rest: 
+** DONE Expression1Rest: 
     ? Expression : Expression1
 
 ** DONE Expression2:

@@ -221,11 +221,11 @@ mod tests {
     #[test]
     fn test_parse_arguments() {
         let src = "()";
-        let node = parse_par_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        let node = parse_arguments(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 2);
 
         let src = "(foo, bar, foo + bar)";
-        let node = parse_par_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        let node = parse_arguments(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 5);
     }
 

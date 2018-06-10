@@ -20,6 +20,11 @@ fn is_infix_op(s: &str) -> bool {
         s == "*" || s == "/" || s == "%"
 }
 
+fn is_assignment_op(s: &str) -> bool {
+    s == "=" || s == "+=" || s == "-=" || s == "*=" || s == "/=" || s == "&=" ||
+        s == "|=" || s == "^=" || s == "%=" || s == "<<=" || s == ">>=" || s == ">>>="
+}
+
 #[allow(dead_code)]
 pub fn parse_prefix_op(tokens: &mut TokenIter, src: &str) -> ParseRes {
     match tokens.next() {
@@ -49,13 +54,46 @@ pub fn parse_infix_op(tokens: &mut TokenIter, src: &str) -> ParseRes {
     }
 }
 
-pub fn parse_expression(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+#[allow(dead_code)]
+pub fn parse_assignment_op(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    match tokens.next() {
+        Some(tok) if is_assignment_op(tok.val(src))
+            => Ok(nterm(NTermType::AssignmentOperator, vec![term(*tok)])),
+        Some(tok) => Err(ParseErr::Point("Expected assignment operator".to_owned(), *tok)),
+        None => Err(ParseErr::Raw("Expected assignment operator, got EOF".to_owned()))
+    }
 }
 
-pub fn parse_expression1(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_expression(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![parse_expression1(tokens, src)?];
+    while let Some(tok) = tokens.clone().next() {
+        if is_assignment_op(tok.val(src)) {
+            children.push(parse_assignment_op(tokens, src)?);
+            children.push(parse_expression1(tokens, src)?);
+        } else { break }
+    }
+    Ok(nterm(NTermType::Expression, children))
 }
+
+pub fn parse_expression1(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![parse_expression2(tokens, src)?];
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "?" {
+            children.push(parse_expression1_rest(tokens, src)?)
+        } else { break }
+    }
+    Ok(nterm(NTermType::Expression1, children))
+}
+
+#[allow(dead_code)]
+pub fn parse_expression1_rest(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    Ok(nterm(NTermType::Expression1Rest, vec![
+        assert_term(tokens, src, "?")?,
+        parse_expression(tokens, src)?,
+        assert_term(tokens, src, ":")?,
+        parse_expression1(tokens, src)?]))
+}
+
 
 #[allow(dead_code)]
 pub fn parse_expression2(tokens: &mut TokenIter, src: &str) -> ParseRes {
@@ -156,6 +194,22 @@ mod tests {
         assert!(src.iter().all(|src| {
             parse_infix_op(&mut lex(src, "").unwrap().iter(), src).is_ok()
         }));
+    }
+
+    #[test]
+    fn test_parse_assignment_op() {
+        let src = ["=", "+=", "-=", "*=", "/=", "&=", "|=", "^=",
+                   "%=", "<<=", ">>=", ">>>="];
+        assert!(src.iter().all(|src| {
+            parse_assignment_op(&mut lex(src, "").unwrap().iter(), src).is_ok()
+        }));
+    }
+
+    #[test]
+    fn test_parse_expression() {
+        let src = "x = y + (float)45 - (float)i++ - 54";
+        let node = parse_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
     }
 
     #[test]
