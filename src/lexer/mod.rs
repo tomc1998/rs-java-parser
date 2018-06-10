@@ -178,6 +178,31 @@ pub fn try_key(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
 }
 
 #[inline]
+pub fn try_char_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
+    if cix.clone().next().unwrap().1 == '\'' {
+        let (start, _) = cix.next().unwrap();
+        // Keep consuming until we hit another unescaped "
+        let mut escaped = false;
+        let mut end = None;
+        while let Some((ix, c)) = cix.next() {
+            if escaped {
+                escaped = false;
+                continue;
+            } else if c == '\\' {
+                escaped = true;
+                continue;
+            } else if c == '\'' {
+                end = Some(ix + 1);
+                break;
+            }
+        }
+        match end {
+            None => Err(LexErr::Raw("Unexpected EOF in char literal".to_owned())),
+            Some(end) => Ok(Some(Token::new_string_lit(start, end)))
+        }
+    } else { Ok(None) }
+}
+
 pub fn try_string_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
     if cix.clone().next().unwrap().1 == '"' {
         let (start, _) = cix.next().unwrap();
@@ -227,8 +252,32 @@ pub fn try_num_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
             end = ix;
         }
         for _ in 0..num_consumed { cix.next(); } // Advance the iterator
-        Ok(Some(Token::new_num_lit(start, end)))
+        if consumed_decimal_point {
+            Ok(Some(Token::new_float_lit(start, end)))
+        } else {
+            Ok(Some(Token::new_int_lit(start, end)))
+        }
     } else { Ok(None) }
+}
+
+#[inline]
+pub fn try_null_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
+    let start = cix.clone().next().unwrap().0;
+    if cix.as_str().starts_with("null") {
+        return match cix.clone().skip(4).next() {
+            Some((_, c)) if !c.is_alphanumeric() => {
+                for _ in 0..4 { cix.next(); } // Consume
+                Ok(Some(Token::new_null_lit(start, start + 4)))
+            }
+            None => {
+                for _ in 0..4 { cix.next(); } // Consume
+                Ok(Some(Token::new_null_lit(start, start + 4)))
+            }
+            _ => Ok(None)
+        }
+    } else {
+        Ok(None)
+    }
 }
 
 #[inline]
@@ -279,7 +328,11 @@ pub fn lex_token(cix: &mut CharIndices) -> Result<Token, LexErr> {
         Ok(tok)
     } else if let Some(tok) = try_bool_lit(cix)? {
         Ok(tok)
+    } else if let Some(tok) = try_null_lit(cix)? {
+        Ok(tok)
     } else if let Some(tok) = try_key(cix)? {
+        Ok(tok)
+    } else if let Some(tok) = try_char_lit(cix)? {
         Ok(tok)
     } else if let Some(tok) = try_string_lit(cix)? {
         Ok(tok)

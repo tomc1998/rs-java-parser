@@ -9,6 +9,7 @@ mod annotations;
 mod imports;
 mod types;
 mod expressions;
+mod atoms;
 
 pub use self::error::*;
 pub use self::node::*;

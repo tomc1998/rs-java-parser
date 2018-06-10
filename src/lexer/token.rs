@@ -4,7 +4,8 @@ pub struct Point(pub usize);
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
 pub enum TokenType {
-    Ident, Punc, Key, Op, NumLit, StringLit, BoolLit, Comment
+    Ident, Punc, Key, Op, IntLit, FloatLit, StringLit, CharLit, BoolLit,
+    NullLit, Comment
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
@@ -27,8 +28,17 @@ impl<'a> Token {
     pub fn new_op(start: usize, end: usize) -> Token {
         Token { start: Point(start), end: Point(end), token_type: TokenType::Op }
     }
-    pub fn new_num_lit(start: usize, end: usize) -> Token {
-        Token { start: Point(start), end: Point(end), token_type: TokenType::NumLit }
+    pub fn new_float_lit(start: usize, end: usize) -> Token {
+        Token { start: Point(start), end: Point(end), token_type: TokenType::FloatLit }
+    }
+    pub fn new_int_lit(start: usize, end: usize) -> Token {
+        Token { start: Point(start), end: Point(end), token_type: TokenType::IntLit }
+    }
+    pub fn new_null_lit(start: usize, end: usize) -> Token {
+        Token { start: Point(start), end: Point(end), token_type: TokenType::NullLit }
+    }
+    pub fn new_char_lit(start: usize, end: usize) -> Token {
+        Token { start: Point(start), end: Point(end), token_type: TokenType::CharLit }
     }
     pub fn new_string_lit(start: usize, end: usize) -> Token {
         Token { start: Point(start), end: Point(end), token_type: TokenType::StringLit }

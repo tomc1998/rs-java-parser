@@ -14,6 +14,9 @@ public class Main {
 
     List<Person> personList = Arrays.asList(p0, p1, p2);
 
+    String someString = null;
+    char someChar = '\n';
+
     for (Person p : personList) {
       System.out.println(p.getName() + ", aged " + p.getAge());
     }
