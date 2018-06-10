@@ -6,18 +6,16 @@ pub fn parse_basic_type(tokens: &mut TokenIter, _src: &str) -> ParseRes {
     Ok(nterm(NTermType::BasicType, vec![term(*tokens.next().unwrap())]))
 }
 
+pub fn is_basic_type(s: &str) -> bool {
+    s == "byte" || s == "int" || s == "short" || s == "char" ||
+        s == "long" || s == "float" || s == "double" || s == "boolean"
+}
+
 #[allow(dead_code)]
 pub fn parse_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let children = match tokens.clone().next().ok_or(
         ParseErr::Raw("Unexpected EOF, expected type".to_owned()))? {
-        tok if tok.val(src) == "byte" ||
-            tok.val(src) == "int" ||
-            tok.val(src) == "short" ||
-            tok.val(src) == "char" ||
-            tok.val(src) == "long" ||
-            tok.val(src) == "float" ||
-            tok.val(src) == "double" ||
-            tok.val(src) == "boolean" => vec![parse_basic_type(tokens, src)?],
+        tok if is_basic_type(tok.val(src)) => vec![parse_basic_type(tokens, src)?],
         _ => vec![parse_reference_type(tokens, src)?],
     };
     Ok(nterm(NTermType::Type, children))

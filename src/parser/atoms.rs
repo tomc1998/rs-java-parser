@@ -1,6 +1,6 @@
 use super::*;
 use super::expressions::parse_expression;
-use super::types::{parse_basic_type, parse_non_wildcard_type_arguments};
+use super::types::{parse_basic_type, parse_non_wildcard_type_arguments, is_basic_type};
 use super::creators::{parse_creator, parse_identifier_suffix};
 use lexer::TokenType;
 
@@ -142,7 +142,7 @@ pub fn parse_primary(tokens: &mut TokenIter, src: &str) -> ParseRes {
         }
         Some(tok) if tok.token_type == TokenType::Ident => {
             let mut children = vec![term(*tokens.next().unwrap())];
-            while let Some(tok) = tokens.next() {
+            while let Some(tok) = tokens.clone().next() {
                 if tok.val(src) == "." {
                     children.push(term(*tokens.next().unwrap()));
                 } else {
@@ -156,14 +156,7 @@ pub fn parse_primary(tokens: &mut TokenIter, src: &str) -> ParseRes {
             }
             children
         }
-        Some(tok) if tok.val(src) == "byte" ||
-            tok.val(src) == "int" ||
-            tok.val(src) == "short" ||
-            tok.val(src) == "char" ||
-            tok.val(src) == "long" ||
-            tok.val(src) == "float" ||
-            tok.val(src) == "double" ||
-            tok.val(src) == "boolean" => {
+        Some(tok) if is_basic_type(tok.val(src)) => {
                 let mut children = vec![parse_basic_type(tokens, src)?];
                 // Consume all []
                 let mut consumed = 0;
