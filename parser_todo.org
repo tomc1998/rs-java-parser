@@ -1,4 +1,4 @@
-* Identifiers
+* DONE Identifiers
 ** DONE Identifier:
     IDENTIFIER
 
@@ -9,7 +9,7 @@
     QualifiedIdentifier { , QualifiedIdentifier }
 
 
-* Compilation unit
+* TODO Compilation unit
 ** TODO CompilationUnit: 
     [[Annotations] package QualifiedIdentifier ;]
                                 {ImportDeclaration} {TypeDeclaration}
@@ -48,7 +48,7 @@
     @ interface Identifier AnnotationTypeBody
 
 
-* Types
+* DONE Types
 ** DONE Type:
     BasicType {[]}
     ReferenceType  {[]}
@@ -95,11 +95,11 @@
 ** DONE TypeParameter:
     Identifier [extends Bound]
 
-** TODO Bound:  
+** DONE Bound:  
     ReferenceType { & ReferenceType }
 
 
-* Modifiers / annotations
+* DONE Modifiers / annotations
 ** DONE Modifier: 
     Annotation
     public
@@ -120,29 +120,29 @@
 ** DONE Annotation:
     @ QualifiedIdentifier [ ( [AnnotationElement] ) ]
 
-** TODO AnnotationElement:
+** DONE AnnotationElement:
     ElementValuePairs
     ElementValue
 
-** TODO ElementValuePairs:
+** DONE ElementValuePairs:
     ElementValuePair { , ElementValuePair }
 
-** TODO ElementValuePair:
+** DONE ElementValuePair:
     Identifier = ElementValue
     
-** TODO ElementValue:
+** DONE ElementValue:
     Annotation
     Expression1 
     ElementValueArrayInitializer
 
-** TODO ElementValueArrayInitializer:
+** DONE ElementValueArrayInitializer:
     { [ElementValues] [,] }
 
-** TODO ElementValues:
+** DONE ElementValues:
     ElementValue { , ElementValue }
 
     
-* Classes
+* TODO Classes
 ** TODO ClassBody: 
     { { ClassBodyDeclaration } }
 
@@ -186,7 +186,7 @@
     Identifier ConstructorDeclaratorRest
 
     
-* Interfaces
+* TODO Interfaces
 ** TODO InterfaceBody: 
     { { InterfaceBodyDeclaration } }
 
@@ -227,7 +227,7 @@
     TypeParameters (Type | void) Identifier InterfaceMethodDeclaratorRest
 
 
-* Parameters
+* TODO Parameters
 ** TODO FormalParameters: 
     ( [FormalParameterDecls] )
 
@@ -244,7 +244,7 @@
 
 
 
-* Variable declarations
+* TODO Variable declarations
 ** TODO VariableDeclaratorId:
     Identifier {[]}
     // Example: int[][]
@@ -266,7 +266,7 @@
     { [ VariableInitializer { , VariableInitializer } [,] ] }
 
 
-* Blocks / statements
+* TODO Blocks / statements
 ** TODO Block: 
     { BlockStatements }
 
@@ -304,7 +304,7 @@
     Expression
 
     
-* Try / catch
+* TODO Try / catch
 ** TODO Catches:
     CatchClause { CatchClause }
 
@@ -327,7 +327,7 @@
     {VariableModifier} ReferenceType VariableDeclaratorId = Expression 
 
 
-* Switches
+* TODO Switches
 ** TODO SwitchBlockStatementGroups: 
     { SwitchBlockStatementGroup }
 
@@ -347,7 +347,7 @@
 
 
 
-* For loops
+* TODO For loops
 ** TODO ForControl:
     ForVarControl
     ForInit ; [Expression] ; [ForUpdate]
@@ -366,8 +366,8 @@
 ** TODO ForUpdate:
     StatementExpression { , StatementExpression }    
 
-
-* Expressions
+    
+* TODO Expressions
 ** TODO Expression: 
     Expression1 [AssignmentOperator Expression1]
 
@@ -399,7 +399,7 @@
     instanceof Type
 
 
-* Operators
+* TODO Operators
 ** TODO InfixOp: 
     || 
     &&
@@ -439,7 +439,7 @@
     --
 
 
-* 'Atoms'
+* TODO 'Atoms'
 ** TODO Primary: 
     Literal
     ParExpression
@@ -473,7 +473,7 @@
     Identifier Arguments
 
     
-* . access, & new exprs
+* TODO . access, & new exprs
 ** TODO Creator:  
     NonWildcardTypeArguments CreatedName ClassCreatorRest
     CreatedName (ClassCreatorRest | ArrayCreatorRest)
@@ -509,7 +509,7 @@
     [ Expression ]
 
 
-* Enums
+* TODO Enums
 ** TODO EnumBody:
     { [EnumConstants] [,] [EnumBodyDeclarations] }
 
@@ -525,7 +525,7 @@
 
 
     
-* Annotation declarations
+* TODO Annotation declarations
 ** TODO AnnotationTypeBody:
     { [AnnotationTypeElementDeclarations] }
 

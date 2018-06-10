@@ -8,6 +8,7 @@ mod modifiers;
 mod annotations;
 mod imports;
 mod types;
+mod expressions;
 
 pub use self::error::*;
 pub use self::node::*;
