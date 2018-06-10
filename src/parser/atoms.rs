@@ -64,7 +64,27 @@ pub fn parse_par_expression(tokens: &mut TokenIter, src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
-pub fn parse_primary(_tokens: TokenIter, _src: &str) -> ParseRes {
+pub fn parse_super_suffix(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let children = match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "." => {
+            let mut children = vec![
+                term(*tokens.next().unwrap()),
+                assert_term_with_type(tokens, TokenType::Ident)?];
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "(" => {
+                    children.push(parse_arguments(tokens, src)?);
+                }
+                _ => ()
+            }
+            children
+        }
+        _ => vec![parse_arguments(tokens, src)?]
+    };
+    Ok(nterm(NTermType::SuperSuffix, children))
+}
+
+#[allow(dead_code)]
+pub fn parse_primary(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
     unimplemented!()
 }
 
@@ -102,5 +122,24 @@ mod tests {
         let src = "(foo, bar, foo + bar)";
         let node = parse_par_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 5);
+    }
+
+    #[test]
+    fn test_parse_super_suffix() {
+        let src = ".foo";
+        let node = parse_super_suffix(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 2);
+
+        let src = ".foo()";
+        let node = parse_super_suffix(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
+
+        let src = "()";
+        let node = parse_super_suffix(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 1);
+
+        let src = "(foo, bar)";
+        let node = parse_super_suffix(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 1);
     }
 }
