@@ -84,6 +84,21 @@ pub fn parse_super_suffix(tokens: &mut TokenIter, src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
+pub fn parse_explicit_generic_invocation_suffix(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let children = match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "super" => vec![
+            term(*tokens.next().unwrap()),
+            parse_super_suffix(tokens, src)?],
+        Some(tok) if tok.token_type == TokenType::Ident => vec![
+            term(*tokens.next().unwrap()),
+            parse_arguments(tokens, src)?],
+        Some(tok) => return Err(ParseErr::Point("Expected 'super' or identifier".to_owned(), *tok)),
+        None => return Err(ParseErr::Raw("Expected 'super' or identifier, got EOF".to_owned())),
+    };
+    Ok(nterm(NTermType::ExplicitGenericInvocationSuffix, children))
+}
+
+#[allow(dead_code)]
 pub fn parse_primary(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
     unimplemented!()
 }
@@ -141,5 +156,18 @@ mod tests {
         let src = "(foo, bar)";
         let node = parse_super_suffix(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_explicit_generic_invocation_suffix() {
+        let src = "super.foo()";
+        let node = parse_explicit_generic_invocation_suffix(&mut lex(src, "").unwrap().iter(),
+                                                            src).unwrap();
+        assert_eq!(node.children.len(), 2);
+
+        let src = "foo()";
+        let node = parse_explicit_generic_invocation_suffix(&mut lex(src, "").unwrap().iter(),
+                                                            src).unwrap();
+        assert_eq!(node.children.len(), 2);
     }
 }
