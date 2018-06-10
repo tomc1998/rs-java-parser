@@ -448,7 +448,8 @@
     Identifier { . Identifier } [IdentifierSuffix]
     BasicType {[]} . class
     void . class
-** TODO Literal:
+
+** DONE Literal:
     IntegerLiteral
     FloatingPointLiteral
     CharacterLiteral 

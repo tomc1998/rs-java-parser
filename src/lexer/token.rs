@@ -4,8 +4,9 @@ pub struct Point(pub usize);
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
 pub enum TokenType {
-    Ident, Punc, Key, Op, IntLit, FloatLit, StringLit, CharLit, BoolLit,
-    NullLit, Comment
+    Ident, Punc, Key, Op,
+    IntLit, FloatLit, StringLit, CharLit, BoolLit, NullLit,
+    Comment
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
