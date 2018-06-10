@@ -12,6 +12,14 @@ fn is_postfix_op(s: &str) -> bool {
     s == "++" || s == "--"
 }
 
+fn is_infix_op(s: &str) -> bool {
+        s == "||" || s == "&&" || s == "|" || s == "^" ||
+        s == "&" || s == "==" || s == "!=" || s == "<" ||
+        s == ">" || s == "<=" || s == ">=" || s == "<<" ||
+        s == ">>" || s == ">>>" || s == "+" || s == "-" ||
+        s == "*" || s == "/" || s == "%"
+}
+
 #[allow(dead_code)]
 pub fn parse_prefix_op(tokens: &mut TokenIter, src: &str) -> ParseRes {
     match tokens.next() {
@@ -28,6 +36,16 @@ pub fn parse_postfix_op(tokens: &mut TokenIter, src: &str) -> ParseRes {
             => Ok(nterm(NTermType::PostfixOp, vec![term(*tok)])),
         Some(tok) => Err(ParseErr::Point("Expected postfix operator".to_owned(), *tok)),
         None => Err(ParseErr::Raw("Expected postfix operator, got EOF".to_owned()))
+    }
+}
+
+#[allow(dead_code)]
+pub fn parse_infix_op(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    match tokens.next() {
+        Some(tok) if is_infix_op(tok.val(src))
+            => Ok(nterm(NTermType::InfixOp, vec![term(*tok)])),
+        Some(tok) => Err(ParseErr::Point("Expected operator".to_owned(), *tok)),
+        None => Err(ParseErr::Raw("Expected operator, got EOF".to_owned()))
     }
 }
 
@@ -99,6 +117,15 @@ mod tests {
         let src = ["++", "--"];
         assert!(src.iter().all(|src| {
             parse_postfix_op(&mut lex(src, "").unwrap().iter(), src).is_ok()
+        }));
+    }
+
+    #[test]
+    fn test_parse_infix_op() {
+        let src = ["||", "&&", "|", "^", "&", "==", "!=", "<", ">", "<=", ">=",
+                   "<<", ">>", ">>>", "+", "-", "*", "/", "%"];
+        assert!(src.iter().all(|src| {
+            parse_infix_op(&mut lex(src, "").unwrap().iter(), src).is_ok()
         }));
     }
 
