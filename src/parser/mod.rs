@@ -10,6 +10,10 @@ mod imports;
 mod types;
 mod creators;
 mod expressions;
+mod switches;
+mod statements;
+mod for_loops;
+mod try_catches;
 mod atoms;
 
 pub use self::error::*;
