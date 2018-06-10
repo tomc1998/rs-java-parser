@@ -18,6 +18,37 @@ pub fn parse_literal(tokens: &mut TokenIter, _src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
+pub fn parse_arguments(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![assert_term(tokens, src, "(")?];
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == ")" => {
+            children.push(term(*tokens.next().unwrap()));
+            return Ok(nterm(NTermType::Arguments, children));
+        }
+        _ => children.push(parse_expression(tokens, src)?),
+    }
+
+    loop {
+        let mut clone = tokens.clone();
+        let tok = clone.next();
+        match tok {
+            Some(tok) if tok.val(src) == ")" => break,
+            Some(tok) if tok.val(src) == "," => match clone.next() {
+                Some(_) => {
+                    tokens.next().unwrap();
+                    children.push(parse_expression(tokens, src)?);
+                }
+                None => return Err(ParseErr::Raw("Expected expression, got EOF".to_owned())),
+            }
+            None => return Err(ParseErr::Raw("Unexpected EOF in expression".to_owned())),
+            Some(tok) => return Err(ParseErr::Point("Expected ')' or ','".to_owned(), *tok)),
+        }
+    }
+    children.push(assert_term(tokens, src, ")")?);
+    Ok(nterm(NTermType::ParExpression, children))
+}
+
+#[allow(dead_code)]
 pub fn parse_par_expression(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let mut children = vec![assert_term(tokens, src, "(")?];
     loop {
@@ -56,5 +87,20 @@ mod tests {
         let src = "()";
         let node = parse_par_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 2);
+
+        let src = "(foo + bar)";
+        let node = parse_par_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
+    }
+
+    #[test]
+    fn test_parse_arguments() {
+        let src = "()";
+        let node = parse_par_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 2);
+
+        let src = "(foo, bar, foo + bar)";
+        let node = parse_par_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 5);
     }
 }
