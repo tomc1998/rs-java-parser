@@ -394,7 +394,7 @@
 ** TODO Expression2:
     Expression3 [Expression2Rest]
 
-** TODO Expression2Rest:
+** DONE Expression2Rest:
     { InfixOp Expression3 }
     instanceof Type
 

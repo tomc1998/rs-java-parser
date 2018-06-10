@@ -58,6 +58,26 @@ pub fn parse_expression1(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
+pub fn parse_expression2_rest(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let children = match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "instanceof" => vec![
+            term(*tokens.next().unwrap()),
+            parse_type(tokens, src)?],
+        _ => {
+            let mut children = Vec::new();
+            while let Some(tok) = tokens.clone().next() {
+                if is_infix_op(tok.val(src)) {
+                    children.push(parse_infix_op(tokens, src)?);
+                    children.push(parse_expression3(tokens, src)?);
+                } else { break }
+            }
+            children
+        }
+    };
+    Ok(nterm(NTermType::Expression2Rest, children))
+}
+
+#[allow(dead_code)]
 pub fn parse_expression3(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let children = match tokens.clone().next() {
         Some(tok) if is_prefix_op(tok.val(src)) => vec![
@@ -127,6 +147,17 @@ mod tests {
         assert!(src.iter().all(|src| {
             parse_infix_op(&mut lex(src, "").unwrap().iter(), src).is_ok()
         }));
+    }
+
+    #[test]
+    fn test_parse_expression2_rest() {
+        let src = "+ foo + bar";
+        let node = parse_expression2_rest(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 4);
+
+        let src = "instanceof Foo";
+        let node = parse_expression2_rest(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 2);
     }
 
     #[test]
