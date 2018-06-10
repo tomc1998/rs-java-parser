@@ -101,12 +101,9 @@ pub fn parse_expression3(tokens: &mut TokenIter, src: &str) -> ParseRes {
             match clone.next() {
                 Some(tok) if is_basic_type(tok.val(src)) =>
                     children.push(parse_type(tokens, src)?),
-                Some(tok) if tok.token_type == TokenType::Ident => match clone.next() {
-                    Some(tok) if tok.val(src) == "<" =>
-                        children.push(parse_type(tokens, src)?),
-                    _ => children.push(parse_primary(tokens, src)?),
-                }
-                Some(tok) => return Err(ParseErr::Point("Expected type or expression".to_owned(), *tok)),
+                Some(tok) if tok.token_type == TokenType::Ident => 
+                    children.push(parse_type(tokens, src)?),
+                Some(_) => children.push(parse_primary(tokens, src)?),
                 None => return Err(ParseErr::Raw("Expected type or expression, got EOF".to_owned())),
             }
             children.push(assert_term(tokens, src, ")")?);
@@ -163,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_parse_expression2() {
-        let src = "x + y + 2.0";
+        let src = "(float)x + (float)y + 2.0";
         let node = parse_expression2(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 2);
 
@@ -172,6 +169,10 @@ mod tests {
         assert_eq!(node.children.len(), 2);
 
         let src = "x";
+        let node = parse_expression2(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 1);
+
+        let src = "(Foo)x";
         let node = parse_expression2(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 1);
     }
