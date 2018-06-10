@@ -56,4 +56,13 @@ impl<'a> Token {
             src.slice_unchecked(self.start.0, self.end.0)
         }
     }
+
+    pub fn is_literal(&self) -> bool {
+        self.token_type == TokenType::IntLit ||
+            self.token_type == TokenType::FloatLit ||
+            self.token_type == TokenType::StringLit ||
+            self.token_type == TokenType::CharLit ||
+            self.token_type == TokenType::BoolLit ||
+            self.token_type == TokenType::NullLit
+    }
 }

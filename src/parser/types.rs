@@ -2,7 +2,7 @@ use super::*;
 use lexer::TokenType;
 
 #[allow(dead_code)]
-fn parse_basic_type(tokens: &mut TokenIter, _src: &str) -> ParseRes {
+pub fn parse_basic_type(tokens: &mut TokenIter, _src: &str) -> ParseRes {
     Ok(nterm(NTermType::BasicType, vec![term(*tokens.next().unwrap())]))
 }
 

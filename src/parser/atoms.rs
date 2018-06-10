@@ -1,5 +1,7 @@
 use super::*;
 use super::expressions::parse_expression;
+use super::types::{parse_basic_type, parse_non_wildcard_type_arguments};
+use super::creators::{parse_creator, parse_identifier_suffix};
 use lexer::TokenType;
 
 #[allow(dead_code)]
@@ -99,8 +101,103 @@ pub fn parse_explicit_generic_invocation_suffix(tokens: &mut TokenIter, src: &st
 }
 
 #[allow(dead_code)]
-pub fn parse_primary(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_primary(tokens: &mut TokenIter, src: &str) -> ParseRes {
+
+    // type=lit   Literal
+    // valu=(     ParExpression
+    // valu=this  this [Arguments]
+    // valu=super super SuperSuffix
+    // valu=new   new Creator
+    // valu=<     NonWildcardTypeArguments (ExplicitGenericInvocationSuffix | this Arguments)
+    // type=ident Identifier { . Identifier } [IdentifierSuffix]
+    // valu=bt    BasicType {[]} . class
+    // valu=void  void . class
+    let children = match tokens.clone().next() {
+        Some(tok) if tok.is_literal() => vec![parse_basic_type(tokens, src)?],
+        Some(tok) if tok.val(src) == "(" => vec![parse_par_expression(tokens, src)?],
+        Some(tok) if tok.val(src) == "this" => {
+            let mut children = vec![term(*tokens.next().unwrap())];
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "(" => children.push(parse_arguments(tokens, src)?),
+                _ => ()
+            }
+            children
+        }
+        Some(tok) if tok.val(src) == "super" => vec![
+            term(*tokens.next().unwrap()),
+            parse_super_suffix(tokens, src)?],
+        Some(tok) if tok.val(src) == "new" => vec![
+            term(*tokens.next().unwrap()),
+            parse_creator(tokens, src)?],
+        Some(tok) if tok.val(src) == "<" => {
+            let mut children = vec![parse_non_wildcard_type_arguments(tokens, src)?];
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "this" => {
+                    children.push(term(*tokens.next().unwrap()));
+                    children.push(parse_arguments(tokens, src)?);
+                }
+                _ => children.push(parse_explicit_generic_invocation_suffix(tokens, src)?)
+            }
+            children
+        }
+        Some(tok) if tok.token_type == TokenType::Ident => {
+            let mut children = vec![term(*tokens.next().unwrap())];
+            while let Some(tok) = tokens.next() {
+                if tok.val(src) == "." {
+                    children.push(term(*tokens.next().unwrap()));
+                } else {
+                    break
+                }
+            }
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "(" || tok.val(src) == "." =>
+                    children.push(parse_identifier_suffix(tokens, src)?),
+                _ => ()
+            }
+            children
+        }
+        Some(tok) if tok.val(src) == "byte" ||
+            tok.val(src) == "int" ||
+            tok.val(src) == "short" ||
+            tok.val(src) == "char" ||
+            tok.val(src) == "long" ||
+            tok.val(src) == "float" ||
+            tok.val(src) == "double" ||
+            tok.val(src) == "boolean" => {
+                let mut children = vec![parse_basic_type(tokens, src)?];
+                // Consume all []
+                let mut consumed = 0;
+                let mut clone = tokens.clone();
+                while let Some(tok) = clone.next() {
+                    if tok.val(src) == "[" {
+                        if let Some(tok) = clone.next() {
+                            if tok.val(src) == "]" {
+                                consumed += 2
+                            } else {
+                                return Err(ParseErr::Point("Mismatched []".to_owned(), *tok));
+                            }
+                        } else {
+                            return Err(ParseErr::Point("Mismatched []".to_owned(), *tok));
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                for _ in 0..consumed { children.push(term(*tokens.next().unwrap())); }
+                children.push(assert_term(tokens, src, ".")?);
+                children.push(assert_term(tokens, src, "class")?);
+                children
+            }
+        Some(tok) if tok.val(src) == "void" =>
+            vec![
+                assert_term(tokens, src, "void")?,
+                assert_term(tokens, src, ".")?,
+                assert_term(tokens, src, "class")?
+            ],
+        Some(tok) => return Err(ParseErr::Point("Expected type, literal, or value".to_owned(), *tok)),
+        None => return Err(ParseErr::Raw("Expected type, literal, or value, got EOF".to_owned())),
+    };
+    Ok(nterm(NTermType::Primary, children))
 }
 
 #[cfg(test)]
@@ -169,5 +266,16 @@ mod tests {
         let node = parse_explicit_generic_invocation_suffix(&mut lex(src, "").unwrap().iter(),
                                                             src).unwrap();
         assert_eq!(node.children.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_primary() {
+        let src = "1.0";
+        let node = parse_primary(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 1);
+
+        let src = "boolean.class";
+        let node = parse_primary(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
     }
 }
