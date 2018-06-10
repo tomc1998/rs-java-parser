@@ -1,7 +1,7 @@
 use super::*;
 use super::atoms::parse_primary;
 use lexer::TokenType;
-use super::types::{is_basic_type, parse_type};
+use super::types::{parse_type};
 use super::creators::parse_selector;
 
 fn is_prefix_op(s: &str) -> bool {
@@ -133,19 +133,49 @@ pub fn parse_expression3(tokens: &mut TokenIter, src: &str) -> ParseRes {
         Some(tok) if is_prefix_op(tok.val(src)) => vec![
                 parse_prefix_op(tokens, src)?,
                 parse_expression3(tokens, src)?],
+        // Small deviation from the grammar here - the grammar appears to be
+        // wrong, and this branch is trying to ascertain whether a ( bracket
+        // means a bracketed expression (i.e. "(1 + 2)"), or a type-cast
+        // ("(float) i").
+        // We simply search until the matching rparen, and check the next token.
+        // If the next token is a ( or Ident, it's a cast - otherwise, it's an
+        // expression.
         Some(tok) if tok.val(src) == "(" => {
-            let mut children = vec![term(*tokens.next().unwrap())];
+            // Find the matching ')'
+            let mut level = -1;
             let mut clone = tokens.clone();
-            match clone.next() {
-                Some(tok) if is_basic_type(tok.val(src)) =>
-                    children.push(parse_type(tokens, src)?),
-                Some(tok) if tok.token_type == TokenType::Ident => 
-                    children.push(parse_type(tokens, src)?),
-                Some(_) => children.push(parse_primary(tokens, src)?),
-                None => return Err(ParseErr::Raw("Expected type or expression, got EOF".to_owned())),
+            for t in clone.by_ref() {
+                if t.val(src) == "(" {
+                    level += 1;
+                } else if t.val(src) == ")" {
+                    level -= 1;
+                    if level < 0 {
+                        break;
+                    }
+                }
             }
-            children.push(assert_term(tokens, src, ")")?);
-            children.push(parse_expression3(tokens, src)?);
+            if level >= 0 {
+                return Err(ParseErr::Raw("Unexpected EOF in expression - mismatched parentheses"
+                                         .to_owned()));
+            }
+            // Now the next token in 'clone' is the token just after the last rparen.
+            let children = match clone.next() {
+                // Type cast
+                Some(tok) if tok.val(src) == "("
+                    || tok.token_type == TokenType::Ident
+                    || tok.is_literal() => {
+                    vec![term(*tokens.next().unwrap()), // (
+                         parse_type(tokens, src)?,
+                         assert_term(tokens, src, ")")?,
+                         parse_expression3(tokens, src)?]
+                }
+                // Expr
+                _ => {
+                    vec![term(*tokens.next().unwrap()), // (
+                         parse_expression(tokens, src)?,
+                         assert_term(tokens, src, ")")?]
+                }
+            };
             children
         }
         _ => {
@@ -206,9 +236,10 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_expression() {
-        let src = "x = y + (float)45 - (float)i++ - 54";
-        let node = parse_expression(&mut lex(src, "").unwrap().iter(), src).unwrap();
+    fn test_parse_full_expression() {
+        let src = "x = y + (float)45 - ((float)i++ - 54.0)";
+        let node = parse_expression(&mut lex(src, "").unwrap().iter(), src);
+        let node = node.unwrap();
         assert_eq!(node.children.len(), 3);
     }
 
