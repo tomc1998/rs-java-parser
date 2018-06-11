@@ -267,13 +267,13 @@
 
 
 * TODO Blocks / statements
-** TODO Block: 
+** DONE Block: 
     { BlockStatements }
 
-** TODO BlockStatements: 
+** DONE BlockStatements: 
     { BlockStatement }
 
-** TODO BlockStatement:
+** DONE BlockStatement:
     LocalVariableDeclarationStatement
     ClassOrInterfaceDeclaration
     [Identifier :] Statement

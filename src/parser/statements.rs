@@ -1,16 +1,64 @@
 use super::*;
+use super::compilation_units::parse_class_or_interface_declaration;
 use lexer::TokenType;
 use super::atoms::parse_par_expression;
 use super::switches::parse_switch_block_statement_groups;
 use super::expressions::parse_expression;
 use super::for_loops::parse_for_control;
+use super::modifiers::is_modifier_or_annot;
+use super::types::is_basic_type;
 use super::try_catches::{parse_resource_specification,
                          parse_catches,
                          parse_finally};
 
+pub fn is_variable_modifier(s: &str) -> bool {
+    s == "final" || s == "@"
+}
+
 #[allow(dead_code)]
-pub fn parse_block(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
+pub fn parse_local_variable_declaration_statement(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
     unimplemented!()
+}
+
+pub fn parse_block_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut clone = tokens.clone();
+    let children = match clone.next() {
+        Some(tok) if
+        is_modifier_or_annot(tok.val(src))
+            || tok.val(src) == "class"
+            || tok.val(src) == "interface"
+            || tok.val(src) == "enum"
+            => vec![parse_class_or_interface_declaration(tokens, src)?],
+        Some(tok) if tok.token_type == TokenType::Ident => match clone.next() {
+            Some(tok) if tok.val(src) == ":" => vec![parse_statement(tokens, src)?],
+            _ => vec![parse_local_variable_declaration_statement(tokens, src)?],
+        }
+        Some(tok) if is_variable_modifier(tok.val(src)) ||
+            is_basic_type(tok.val(src)) => vec![
+                parse_local_variable_declaration_statement(tokens, src)?],
+        _ => vec![parse_statement(tokens, src)?],
+    };
+    Ok(nterm(NTermType::BlockStatement, children))
+}
+
+#[allow(dead_code)]
+pub fn parse_block_statements(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = Vec::new();
+    loop {
+        match tokens.clone().next() {
+            Some(tok) if tok.val(src) == "}" => break,
+            _ => children.push(parse_block_statement(tokens, src)?),
+        }
+    }
+    Ok(nterm(NTermType::BlockStatements, children))
+}
+
+#[allow(dead_code)]
+pub fn parse_block(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    Ok(nterm(NTermType::Block,
+          vec![assert_term(tokens, src, "{")?,
+               parse_block_statements(tokens, src)?,
+               assert_term(tokens, src, "}")?]))
 }
 
 #[allow(dead_code)]

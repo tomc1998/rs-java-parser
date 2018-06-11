@@ -1,22 +1,21 @@
 use super::*;
 use parser::annotations::parse_annotation;
 
+pub fn is_modifier_key(s: &str) -> bool {
+    s == "public" || s == "protected" || s == "private" ||
+        s == "static " || s == "abstract" || s == "final" || s == "native" ||
+        s == "synchronized" || s == "transient" || s == "volatile" || s == "strictfp"
+}
+
+pub fn is_modifier_or_annot(s: &str) -> bool {
+    s == "@" || is_modifier_key(s)
+}
+
 #[allow(dead_code)]
 pub fn parse_modifier(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let child = match tokens.clone().next() {
         Some(tok) if tok.val(src) == "@" => parse_annotation(tokens, src)?,
-        Some(tok) if tok.val(src) == "@" ||
-            tok.val(src) == "public" ||
-            tok.val(src) == "protected" ||
-            tok.val(src) == "private" ||
-            tok.val(src) == "static " ||
-            tok.val(src) == "abstract" ||
-            tok.val(src) == "final" ||
-            tok.val(src) == "native" ||
-            tok.val(src) == "synchronized" ||
-            tok.val(src) == "transient" ||
-            tok.val(src) == "volatile" ||
-            tok.val(src) == "strictfp" => term(*tokens.next().unwrap()),
+        Some(tok) if is_modifier_key(tok.val(src)) => term(*tokens.next().unwrap()),
         Some(tok) => return Err(ParseErr::Point("Expected annotation or modifier".to_owned(), *tok)),
         None => return Err(ParseErr::Raw("Unexpected EOF, expected annotation or modifier".to_owned())),
     };
