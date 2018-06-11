@@ -266,7 +266,7 @@
     { [ VariableInitializer { , VariableInitializer } [,] ] }
 
 
-* TODO Blocks / statements
+* DONE Blocks / statements
 ** DONE Block: 
     { BlockStatements }
 
@@ -278,7 +278,7 @@
     ClassOrInterfaceDeclaration
     [Identifier :] Statement
 
-** TODO LocalVariableDeclarationStatement:
+** DONE LocalVariableDeclarationStatement:
     { VariableModifier }  Type VariableDeclarators ;
 
 ** DONE Statement:

@@ -16,6 +16,7 @@ mod for_loops;
 mod try_catches;
 mod atoms;
 mod compilation_units;
+mod variables;
 
 pub use self::error::*;
 pub use self::node::*;

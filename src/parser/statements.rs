@@ -6,18 +6,28 @@ use super::switches::parse_switch_block_statement_groups;
 use super::expressions::parse_expression;
 use super::for_loops::parse_for_control;
 use super::modifiers::is_modifier_or_annot;
-use super::types::is_basic_type;
+use super::types::{is_basic_type, parse_type};
 use super::try_catches::{parse_resource_specification,
                          parse_catches,
                          parse_finally};
+use super::variables::{parse_variable_modifier, parse_variable_declarators};
 
 pub fn is_variable_modifier(s: &str) -> bool {
     s == "final" || s == "@"
 }
 
 #[allow(dead_code)]
-pub fn parse_local_variable_declaration_statement(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_local_variable_declaration_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = Vec::new();
+    while let Some(tok) = tokens.clone().next() {
+        if is_variable_modifier(tok.val(src)) {
+            children.push(parse_variable_modifier(tokens, src)?);
+        } else { break }
+    }
+    children.push(parse_type(tokens, src)?);
+    children.push(parse_variable_declarators(tokens, src)?);
+    children.push(assert_term(tokens, src, ";")?);
+    Ok(nterm(NTermType::LocalVariableDeclarationStatement, children))
 }
 
 pub fn parse_block_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
