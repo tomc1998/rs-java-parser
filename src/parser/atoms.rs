@@ -102,7 +102,6 @@ pub fn parse_explicit_generic_invocation_suffix(tokens: &mut TokenIter, src: &st
 
 #[allow(dead_code)]
 pub fn parse_primary(tokens: &mut TokenIter, src: &str) -> ParseRes {
-
     // type=lit   Literal
     // valu=(     ParExpression
     // valu=this  this [Arguments]
@@ -113,7 +112,7 @@ pub fn parse_primary(tokens: &mut TokenIter, src: &str) -> ParseRes {
     // valu=bt    BasicType {[]} . class
     // valu=void  void . class
     let children = match tokens.clone().next() {
-        Some(tok) if tok.is_literal() => vec![parse_basic_type(tokens, src)?],
+        Some(tok) if tok.is_literal() => vec![term(*tokens.next().unwrap())],
         Some(tok) if tok.val(src) == "(" => vec![parse_par_expression(tokens, src)?],
         Some(tok) if tok.val(src) == "this" => {
             let mut children = vec![term(*tokens.next().unwrap())];

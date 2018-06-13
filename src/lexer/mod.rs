@@ -246,12 +246,11 @@ pub fn try_num_lit(cix: &mut CharIndices) -> Result<Option<Token>, LexErr> {
                 break;
             } else if c == '.' {
                 consumed_decimal_point = true;
-                continue;
             }
             num_consumed += 1;
             end = ix;
         }
-        for _ in 0..num_consumed+1 { cix.next(); } // Advance the iterator
+        for _ in 0..num_consumed { cix.next(); } // Advance the iterator
         if consumed_decimal_point {
             Ok(Some(Token::new_float_lit(start, end+1)))
         } else {
