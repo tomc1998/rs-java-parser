@@ -227,16 +227,12 @@
     TypeParameters (Type | void) Identifier InterfaceMethodDeclaratorRest
 
 
-* TODO Variabls
+* TODO Formal Parameters
 ** TODO FormalParameters: 
     ( [FormalParameterDecls] )
 
 ** TODO FormalParameterDecls: 
     {VariableModifier}  Type FormalParameterDeclsRest
-
-** DONE VariableModifier:
-    final
-    Annotation
 
 ** TODO FormalParameterDeclsRest: 
     VariableDeclaratorId [, FormalParameterDecls]
@@ -245,6 +241,11 @@
 ** TODO VariableDeclaratorId:
     Identifier {[]}
     // Example: foo[][]
+
+* DONE Variables
+** DONE VariableModifier:
+    final
+    Annotation
 
 ** DONE VariableDeclarators:
     VariableDeclarator { , VariableDeclarator }
