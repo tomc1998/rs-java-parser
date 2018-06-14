@@ -6,28 +6,37 @@ use super::classes::parse_class_body;
 use super::atoms::{parse_arguments,
                    parse_explicit_generic_invocation_suffix,
                    parse_super_suffix};
-use super::types::{parse_non_wildcard_type_arguments,
+use super::types::{is_basic_type,
+                   parse_non_wildcard_type_arguments,
                    parse_non_wildcard_type_arguments_or_diamond,
                    parse_type_arguments_or_diamond};
 
 #[allow(dead_code)]
 pub fn parse_created_name(tokens: &mut TokenIter, src: &str) -> ParseRes {
-    let mut children = vec![assert_term_with_type(tokens, TokenType::Ident)?];
     match tokens.clone().next() {
-        Some(tok) if tok.val(src) == ">" => (),
-        _ => children.push(parse_type_arguments_or_diamond(tokens, src)?),
+        Some(tok) if is_basic_type(tok.val(src)) || tok.token_type == TokenType::Ident => (),
+        Some(tok) => return Err(ParseErr::Point("Expected type name".to_owned(), *tok)),
+        None => return Err(ParseErr::Raw("Expected type name, got EOF".to_owned())),
+    }
+
+    let mut children = vec![term(*tokens.next().unwrap())];
+
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "<" =>
+            children.push(parse_type_arguments_or_diamond(tokens, src)?),
+        _ => ()
     }
     while let Some(tok) = tokens.clone().next() {
         if tok.val(src) == "." {
             tokens.next().unwrap(); // consume '.'
             children.push(assert_term_with_type(tokens, TokenType::Ident)?);
             match tokens.clone().next() {
-                Some(tok) if tok.val(src) == "}" => break,
-                _ => children.push(parse_type_arguments_or_diamond(tokens, src)?),
+                Some(tok) if tok.val(src) == "<" =>
+                    children.push(parse_type_arguments_or_diamond(tokens, src)?),
+                _ => (),
             }
         } else { break }
     }
-    children.push(assert_term(tokens, src, "}")?);
     Ok(nterm(NTermType::CreatedName, children))
 }
 
@@ -202,3 +211,23 @@ pub fn parse_creator(tokens: &mut TokenIter, src: &str) -> ParseRes {
     };
     Ok(nterm(NTermType::Creator, children))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lexer::lex;
+
+    #[test]
+    pub fn test_parse_creator() {
+        let src = "Foo(x, y, 1 + 2)";
+        let node = parse_creator(&mut lex(src, "").unwrap().iter(), src);
+        let node = node.unwrap();
+        assert_eq!(node.children.len(), 2);
+
+        let src = "double[x * 32]";
+        let node = parse_creator(&mut lex(src, "").unwrap().iter(), src);
+        let node = node.unwrap();
+        assert_eq!(node.children.len(), 2);
+    }
+}
+

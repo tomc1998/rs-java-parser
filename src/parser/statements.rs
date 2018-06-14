@@ -196,14 +196,15 @@ mod tests {
     use lexer::lex;
 
     #[test]
-    fn test_parse_variable_modifier() {
+    fn test_parse_block() {
         let src = "{
+    Foo f = new Foo();
     float f = 0.0;
     String s0 = \"Hello, \", s1 = \"world!\";
     String hello = s0 + s1;
 }";
         let node = parse_block(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 3);
-        assert_eq!(node.children[1].children.len(), 3);
+        assert_eq!(node.children[1].children.len(), 4);
     }
 }
