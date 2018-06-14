@@ -477,7 +477,7 @@
     NonWildcardTypeArguments CreatedName ClassCreatorRest
     CreatedName (ClassCreatorRest | ArrayCreatorRest)
 
-** TODO CreatedName:   
+** DONE CreatedName:   
     Identifier [TypeArgumentsOrDiamond] { . Identifier [TypeArgumentsOrDiamond] }
 
 ** TODO ClassCreatorRest: 

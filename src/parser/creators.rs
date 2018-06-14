@@ -1,9 +1,27 @@
+use lexer::TokenType;
 use super::*;
-use super::types::parse_non_wildcard_type_arguments;
+use super::types::{parse_non_wildcard_type_arguments,
+                   parse_type_arguments_or_diamond};
 
 #[allow(dead_code)]
-pub fn parse_created_name(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_created_name(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![assert_term_with_type(tokens, TokenType::Ident)?];
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == ">" => (),
+        _ => children.push(parse_type_arguments_or_diamond(tokens, src)?),
+    }
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "." {
+            tokens.next().unwrap(); // consume '.'
+            children.push(assert_term_with_type(tokens, TokenType::Ident)?);
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "}" => break,
+                _ => children.push(parse_type_arguments_or_diamond(tokens, src)?),
+            }
+        } else { break }
+    }
+    children.push(assert_term(tokens, src, "}")?);
+    Ok(nterm(NTermType::CreatedName, children))
 }
 
 #[allow(dead_code)]
