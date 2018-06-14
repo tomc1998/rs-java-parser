@@ -492,7 +492,7 @@
     Arguments 
     . (class | ExplicitGenericInvocation | this | super Arguments |
                                 new [NonWildcardTypeArguments] InnerCreator)
-** TODO ExplicitGenericInvocation:
+** DONE ExplicitGenericInvocation:
     NonWildcardTypeArguments ExplicitGenericInvocationSuffix
 
 ** TODO InnerCreator:  

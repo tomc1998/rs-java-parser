@@ -3,7 +3,7 @@ use super::*;
 use super::variables::parse_array_initializer;
 use super::expressions::parse_expression;
 use super::classes::parse_class_body;
-use super::atoms::parse_arguments;
+use super::atoms::{parse_arguments, parse_explicit_generic_invocation_suffix};
 use super::types::{parse_non_wildcard_type_arguments,
                    parse_type_arguments_or_diamond};
 
@@ -121,8 +121,11 @@ pub fn parse_identifier_suffix(tokens: &mut TokenIter, src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
-pub fn parse_explicit_generic_invocation(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_explicit_generic_invocation(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    Ok(nterm(NTermType::ExplicitGenericInvocationSuffix, vec![
+        parse_non_wildcard_type_arguments(tokens, src)?,
+        parse_explicit_generic_invocation_suffix(tokens, src)?,
+        ]))
 }
 
 #[allow(dead_code)]
