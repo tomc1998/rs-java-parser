@@ -3,8 +3,11 @@ use super::*;
 use super::variables::parse_array_initializer;
 use super::expressions::parse_expression;
 use super::classes::parse_class_body;
-use super::atoms::{parse_arguments, parse_explicit_generic_invocation_suffix};
+use super::atoms::{parse_arguments,
+                   parse_explicit_generic_invocation_suffix,
+                   parse_super_suffix};
 use super::types::{parse_non_wildcard_type_arguments,
+                   parse_non_wildcard_type_arguments_or_diamond,
                    parse_type_arguments_or_diamond};
 
 #[allow(dead_code)]
@@ -129,13 +132,58 @@ pub fn parse_explicit_generic_invocation(tokens: &mut TokenIter, src: &str) -> P
 }
 
 #[allow(dead_code)]
-pub fn parse_inner_creator(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_inner_creator(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![assert_term_with_type(tokens, TokenType::Ident)?];
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "<" => {
+            children.push(parse_non_wildcard_type_arguments_or_diamond(tokens, src)?);
+        }
+        _ => ()
+    }
+    children.push(parse_class_creator_rest(tokens, src)?);
+    Ok(nterm(NTermType::InnerCreator, children))
 }
 
 #[allow(dead_code)]
-pub fn parse_selector(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_selector(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let children = match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "." => {
+            let mut children = vec![term(*tokens.next().unwrap())];
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "this" =>
+                    children.push(term(*tokens.next().unwrap())),
+                Some(tok) if tok.val(src) == "super" => {
+                    children.push(term(*tokens.next().unwrap()));
+                    children.push(parse_super_suffix(tokens, src)?);
+                }
+                Some(tok) if tok.val(src) == "new" => {
+                    children.push(term(*tokens.next().unwrap()));
+                    match tokens.clone().next() {
+                        Some(tok) if tok.val(src) == "<" =>
+                            children.push(parse_non_wildcard_type_arguments(tokens, src)?),
+                        _ => ()
+                    }
+                    children.push(parse_inner_creator(tokens, src)?);
+                }
+                Some(tok) if tok.token_type == TokenType::Ident => {
+                    children.push(term(*tokens.next().unwrap()));
+                    match tokens.clone().next() {
+                        Some(tok) if tok.val(src) == "(" =>
+                            children.push(parse_arguments(tokens, src)?),
+                        _ => ()
+                    }
+                }
+                _ => children.push(parse_explicit_generic_invocation(tokens, src)?),
+            }
+            children
+        },
+        _ => vec![
+            term(*tokens.next().unwrap()),
+            parse_expression(tokens, src)?,
+            assert_term(tokens, src, "]")?
+        ]
+    };
+    Ok(nterm(NTermType::Selector, children))
 }
 
 #[allow(dead_code)]
