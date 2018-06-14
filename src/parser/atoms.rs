@@ -143,7 +143,8 @@ pub fn parse_primary(tokens: &mut TokenIter, src: &str) -> ParseRes {
             let mut children = vec![term(*tokens.next().unwrap())];
             while let Some(tok) = tokens.clone().next() {
                 if tok.val(src) == "." {
-                    children.push(term(*tokens.next().unwrap()));
+                    tokens.next().unwrap();
+                    children.push(assert_term_with_type(tokens, TokenType::Ident)?);
                 } else {
                     break
                 }

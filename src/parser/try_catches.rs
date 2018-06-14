@@ -102,10 +102,8 @@ mod tests {
 
     #[test]
     pub fn test_parse_catches() {
-        let src = "catch (IOException | SocketException e) {
-} catch (Exception e) {
-}
-";
+        let src =
+            "catch (IOException | SocketException e) {e.printStackTrace();} catch (Exception e) {e.printStackTrace();} ";
         let node = parse_catches(&mut lex(src, "").unwrap().iter(), src);
         let node = node.unwrap();
         assert_eq!(node.children.len(), 2);

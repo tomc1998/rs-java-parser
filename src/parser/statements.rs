@@ -40,7 +40,8 @@ pub fn parse_block_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
             || tok.val(src) == "enum"
             => vec![parse_class_or_interface_declaration(tokens, src)?],
         Some(tok) if tok.token_type == TokenType::Ident => match clone.next() {
-            Some(tok) if tok.val(src) == ":" => vec![parse_statement(tokens, src)?],
+            Some(tok) if tok.val(src) == ":" || tok.val(src) == "." =>
+                vec![parse_statement(tokens, src)?],
             _ => vec![parse_local_variable_declaration_statement(tokens, src)?],
         }
         Some(tok) if is_variable_modifier(tok.val(src)) ||
@@ -77,10 +78,13 @@ pub fn parse_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let children = match clone.next() {
         Some(tok) if tok.val(src) == "{" => vec![parse_block(tokens, src)?],
         Some(tok) if tok.val(src) == ";" => vec![term(*tokens.next().unwrap())],
-        Some(tok) if tok.token_type == TokenType::Ident => vec![
-            term(*tokens.next().unwrap()),
-            assert_term(tokens, src, ":")?,
-            parse_statement(tokens, src)?],
+        Some(tok) if tok.token_type == TokenType::Ident => match clone.next() {
+            Some(tok) if tok.val(src) == ":" => vec![
+                term(*tokens.next().unwrap()), // Ident
+                term(*tokens.next().unwrap()), // ":"
+                parse_statement(tokens, src)?],
+            _ => vec![parse_expression(tokens, src)?, assert_term(tokens, src, ";")?],
+        }
         Some(tok) if tok.val(src) == "if" => {
             let mut children = vec![
             term(*tokens.next().unwrap()),
@@ -183,7 +187,7 @@ pub fn parse_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
             }
             children
         }
-        Some(_) => vec![parse_expression(tokens, src)?],
+        Some(_) => vec![parse_expression(tokens, src)?, assert_term(tokens, src, ";")?],
         None => return Err(ParseErr::Raw("Expected statement, found EOF".to_owned())),
     };
     Ok(nterm(NTermType::Statement, children))
@@ -200,6 +204,7 @@ mod tests {
         let src = "{
     Foo f = new Foo();
     float f = 0.0;
+
     String s0 = \"Hello, \", s1 = \"world!\";
     String hello = s0 + s1;
 }";
