@@ -242,6 +242,7 @@
     Identifier {[]}
     // Example: foo[][]
 
+
 * DONE Variables
 ** DONE VariableModifier:
     final
@@ -303,10 +304,10 @@
 
     
 * TODO Try / catch
-** TODO Catches:
+** DONE Catches:
     CatchClause { CatchClause }
 
-** TODO CatchClause:  
+** DONE CatchClause:  
     catch ( {VariableModifier} CatchType Identifier ) Block
 
 ** TODO CatchType:
