@@ -60,3 +60,16 @@ pub fn parse_variable_declarator_id(tokens: &mut TokenIter, src: &str) -> ParseR
     Ok(nterm(NTermType::VariableDeclaratorId, children))
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use lexer::lex;
+
+    #[test]
+    fn test_parse_formal_parameters() {
+        let src = "(int a, int b, Foo<T> someFoo, char[][] charArray)";
+        let node = parse_formal_parameters(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 3);
+    }
+}

@@ -13,11 +13,17 @@ pub fn is_basic_type(s: &str) -> bool {
 
 #[allow(dead_code)]
 pub fn parse_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
-    let children = match tokens.clone().next().ok_or(
+    let mut children = match tokens.clone().next().ok_or(
         ParseErr::Raw("Unexpected EOF, expected type".to_owned()))? {
         tok if is_basic_type(tok.val(src)) => vec![parse_basic_type(tokens, src)?],
         _ => vec![parse_reference_type(tokens, src)?],
     };
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "[" {
+            children.push(term(*tokens.next().unwrap()));
+            children.push(assert_term(tokens, src, "]")?);
+        } else { break }
+    }
     Ok(nterm(NTermType::Type, children))
 }
 
