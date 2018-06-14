@@ -95,3 +95,24 @@ pub fn parse_resource(tokens: &mut TokenIter, src: &str) -> ParseRes {
     Ok(nterm(NTermType::Resource, children))
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lexer::lex;
+
+    #[test]
+    pub fn test_parse_catches() {
+        let src = "catch (IOException | SocketException e) {}";
+        let node = parse_catches(&mut lex(src, "").unwrap().iter(), src);
+        let node = node.unwrap();
+        assert_eq!(node.children.len(), 2);
+    }
+
+    #[test]
+    pub fn test_parse_resource_specification() {
+        let src = "(FileInputStream fis = getInputStream(); SomeOtherRes r = someFunc())";
+        let node = parse_resource_specification(&mut lex(src, "").unwrap().iter(), src);
+        let node = node.unwrap();
+        assert_eq!(node.children.len(), 3);
+    }
+}
