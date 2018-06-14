@@ -480,10 +480,10 @@
 ** DONE CreatedName:   
     Identifier [TypeArgumentsOrDiamond] { . Identifier [TypeArgumentsOrDiamond] }
 
-** TODO ClassCreatorRest: 
+** DONE ClassCreatorRest: 
     Arguments [ClassBody]
 
-** TODO ArrayCreatorRest:
+** DONE ArrayCreatorRest:
     [ (] {[]} ArrayInitializer  |  Expression ] {[ Expression ]} {[]})
 
 

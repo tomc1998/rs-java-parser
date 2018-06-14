@@ -1,5 +1,9 @@
 use lexer::TokenType;
 use super::*;
+use super::variables::parse_array_initializer;
+use super::expressions::parse_expression;
+use super::classes::parse_class_body;
+use super::atoms::parse_arguments;
 use super::types::{parse_non_wildcard_type_arguments,
                    parse_type_arguments_or_diamond};
 
@@ -25,13 +29,48 @@ pub fn parse_created_name(tokens: &mut TokenIter, src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
-pub fn parse_array_creator_rest(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_class_creator_rest(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![parse_arguments(tokens, src)?];
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "{" => children.push(parse_class_body(tokens, src)?),
+        _ => ()
+    }
+    Ok(nterm(NTermType::ClassCreatorRest, children))
 }
 
 #[allow(dead_code)]
-pub fn parse_class_creator_rest(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_array_creator_rest(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut children = vec![assert_term(tokens, src, "[")?];
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "]" => {
+            children.push(term(*tokens.next().unwrap()));
+            while let Some(tok) = tokens.clone().next() {
+                if tok.val(src) == "[" {
+                    children.push(term(*tokens.next().unwrap()));
+                    children.push(assert_term(tokens, src, "]")?);
+                } else { break }
+            }
+            children.push(parse_array_initializer(tokens, src)?);
+        }
+        _ => {
+            children.push(parse_expression(tokens, src)?);
+            children.push(assert_term(tokens, src, "]")?);
+            while let Some(tok) = tokens.clone().next() {
+                if tok.val(src) == "[" {
+                    children.push(term(*tokens.next().unwrap()));
+                    children.push(parse_expression(tokens, src)?);
+                    children.push(assert_term(tokens, src, "]")?);
+                } else { break }
+            }
+            while let Some(tok) = tokens.clone().next() {
+                if tok.val(src) == "[" {
+                    children.push(term(*tokens.next().unwrap()));
+                    children.push(assert_term(tokens, src, "]")?);
+                } else { break }
+            }
+        }
+    }
+    Ok(nterm(NTermType::ArrayCreatorRest, children))
 }
 
 #[allow(dead_code)]
