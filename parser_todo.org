@@ -303,26 +303,26 @@
     Expression
 
     
-* TODO Try / catch
+* DONE Try / catch
 ** DONE Catches:
     CatchClause { CatchClause }
 
 ** DONE CatchClause:  
     catch ( {VariableModifier} CatchType Identifier ) Block
 
-** TODO CatchType:
+** DONE CatchType:
     QualifiedIdentifier { | QualifiedIdentifier }
 
-** TODO Finally:
+** DONE Finally:
     finally Block
 
-** TODO ResourceSpecification:
+** DONE ResourceSpecification:
     ( Resources [;] )
 
-** TODO Resources:
+** DONE Resources:
     Resource { ; Resource }
 
-** TODO Resource:
+** DONE Resource:
     {VariableModifier} ReferenceType VariableDeclaratorId = Expression 
 
 

@@ -21,7 +21,7 @@ pub fn parse_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
     Ok(nterm(NTermType::Type, children))
 }
 
-fn parse_reference_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
+pub fn parse_reference_type(tokens: &mut TokenIter, src: &str) -> ParseRes {
     let mut children = vec![assert_term_with_type(tokens, TokenType::Ident)?];
     if is_type_args_next(tokens, src) {
         children.push(parse_type_arguments(tokens, src)?);

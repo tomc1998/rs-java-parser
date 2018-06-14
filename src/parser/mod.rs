@@ -18,6 +18,7 @@ mod atoms;
 mod compilation_units;
 mod classes;
 mod variables;
+mod formal_parameters;
 
 pub use self::error::*;
 pub use self::node::*;
