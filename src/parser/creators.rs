@@ -74,7 +74,59 @@ pub fn parse_array_creator_rest(tokens: &mut TokenIter, src: &str) -> ParseRes {
 }
 
 #[allow(dead_code)]
-pub fn parse_identifier_suffix(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
+pub fn parse_identifier_suffix(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let children = match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "[" => {
+            let mut children = vec![term(*tokens.next().unwrap())];
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "." || tok.val(src) == "[" => {
+                    while let Some(tok) = tokens.clone().next() {
+                        if tok.val(src) == "[" {
+                            children.push(term(*tokens.next().unwrap()));
+                            children.push(assert_term(tokens, src, "]")?);
+                        } else { break }
+                    }
+                    children.push(assert_term(tokens, src, ".")?);
+                    children.push(assert_term(tokens, src, "class")?);
+                }
+                _ => children.push(parse_expression(tokens, src)?)
+            }
+            children
+        }
+        Some(tok) if tok.val(src) == "." => {
+            let mut children = vec![term(*tokens.next().unwrap())];
+            match tokens.clone().next() {
+                Some(tok) if tok.val(src) == "class" || tok.val(src) == "this" =>
+                    children.push(term(*tokens.next().unwrap())),
+                Some(tok) if tok.val(src) == "super" => {
+                    children.push(term(*tokens.next().unwrap()));
+                    children.push(parse_arguments(tokens, src)?);
+                }
+                Some(tok) if tok.val(src) == "new" => {
+                    children.push(term(*tokens.next().unwrap()));
+                    match tokens.clone().next() {
+                        Some(tok) if tok.val(src) == "<" =>
+                            children.push(parse_non_wildcard_type_arguments(tokens, src)?),
+                        _ => ()
+                    }
+                    children.push(parse_inner_creator(tokens, src)?);
+                }
+                _ => children.push(parse_explicit_generic_invocation(tokens, src)?),
+            }
+            children
+        }
+        _ => vec![parse_arguments(tokens, src)?],
+    };
+    Ok(nterm(NTermType::IdentifierSuffix, children))
+}
+
+#[allow(dead_code)]
+pub fn parse_explicit_generic_invocation(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
+    unimplemented!()
+}
+
+#[allow(dead_code)]
+pub fn parse_inner_creator(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
     unimplemented!()
 }
 

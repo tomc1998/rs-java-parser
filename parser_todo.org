@@ -487,7 +487,7 @@
     [ (] {[]} ArrayInitializer  |  Expression ] {[ Expression ]} {[]})
 
 
-** TODO IdentifierSuffix:
+** DONE IdentifierSuffix:
     [ ({[]} . class | Expression) ]
     Arguments 
     . (class | ExplicitGenericInvocation | this | super Arguments |
