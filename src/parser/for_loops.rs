@@ -1,6 +1,7 @@
 use super::*;
 use super::variables::{parse_variable_modifier};
 use super::formal_parameters::parse_variable_declarator_id;
+use super::statements::parse_statement_expression;
 use super::types::parse_type;
 use super::expressions::parse_expression;
 
@@ -22,12 +23,34 @@ fn parse_for_var_control(tokens: &mut TokenIter, src: &str) -> ParseRes {
     Ok(nterm(NTermType::ForVarControl, children))
 }
 
-fn parse_for_init(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+fn parse_for_init(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == ";" => return Ok(nterm(NTermType::ForInit, vec![])),
+        _ => (),
+    }
+    let mut children = vec![parse_statement_expression(tokens, src)?];
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "," {
+            tokens.next().unwrap(); // Consume ","
+            children.push(parse_statement_expression(tokens, src)?);
+        } else { break }
+    }
+    Ok(nterm(NTermType::ForInit, children))
 }
 
-fn parse_for_update(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+fn parse_for_update(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    match tokens.clone().next() {
+        Some(tok) if tok.val(src) == ")" => return Ok(nterm(NTermType::ForUpdate, vec![])),
+        _ => (),
+    }
+    let mut children = vec![parse_expression(tokens, src)?];
+    while let Some(tok) = tokens.clone().next() {
+        if tok.val(src) == "," {
+            tokens.next().unwrap(); // Consume ","
+            children.push(parse_expression(tokens, src)?);
+        } else { break }
+    }
+    Ok(nterm(NTermType::ForUpdate, children))
 }
 
 #[allow(dead_code)]
@@ -80,6 +103,13 @@ mod tests {
             NodeType::NTerm(NTermType::ForVarControl) => (),
             _ => panic!("Incorrect NTermType")
         }
+    }
+
+    #[test]
+    fn test_parse_for_expr_control() {
+        let src = "int ii = 0; ii < someList.len(); ii ++";
+        let node = parse_for_control(&mut lex(src, "").unwrap().iter(), src).unwrap();
+        assert_eq!(node.children.len(), 5);
     }
 }
 

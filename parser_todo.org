@@ -273,7 +273,6 @@
     { BlockStatement }
 
 ** DONE BlockStatement:
-    LocalVariableDeclarationStatement
     ClassOrInterfaceDeclaration
     [Identifier :] Statement
 
@@ -301,6 +300,7 @@
 
 ** DONE StatementExpression: 
     Expression
+    LocalVariableDeclarationStatement
 
     
 * DONE Try / catch

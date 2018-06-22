@@ -26,7 +26,6 @@ pub fn parse_local_variable_declaration_statement(tokens: &mut TokenIter, src: &
     }
     children.push(parse_type(tokens, src)?);
     children.push(parse_variable_declarators(tokens, src)?);
-    children.push(assert_term(tokens, src, ";")?);
     Ok(nterm(NTermType::LocalVariableDeclarationStatement, children))
 }
 
@@ -39,14 +38,10 @@ pub fn parse_block_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
             || tok.val(src) == "interface"
             || tok.val(src) == "enum"
             => vec![parse_class_or_interface_declaration(tokens, src)?],
-        Some(tok) if tok.token_type == TokenType::Ident => match clone.next() {
-            Some(tok) if tok.val(src) == ":" || tok.val(src) == "." =>
-                vec![parse_statement(tokens, src)?],
-            _ => vec![parse_local_variable_declaration_statement(tokens, src)?],
-        }
         Some(tok) if is_variable_modifier(tok.val(src)) ||
             is_basic_type(tok.val(src)) => vec![
-                parse_local_variable_declaration_statement(tokens, src)?],
+                parse_local_variable_declaration_statement(tokens, src)?,
+                assert_term(tokens, src, ";")?],
         _ => vec![parse_statement(tokens, src)?],
     };
     Ok(nterm(NTermType::BlockStatement, children))
@@ -83,7 +78,7 @@ pub fn parse_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
                 term(*tokens.next().unwrap()), // Ident
                 term(*tokens.next().unwrap()), // ":"
                 parse_statement(tokens, src)?],
-            _ => vec![parse_expression(tokens, src)?, assert_term(tokens, src, ";")?],
+            _ => vec![parse_statement_expression(tokens, src)?, assert_term(tokens, src, ";")?],
         }
         Some(tok) if tok.val(src) == "if" => {
             let mut children = vec![
@@ -187,10 +182,25 @@ pub fn parse_statement(tokens: &mut TokenIter, src: &str) -> ParseRes {
             }
             children
         }
-        Some(_) => vec![parse_expression(tokens, src)?, assert_term(tokens, src, ";")?],
+        Some(tok) => return Err(ParseErr::Point("Unexpected token, expected statement".to_owned(), *tok)),
         None => return Err(ParseErr::Raw("Expected statement, found EOF".to_owned())),
     };
     Ok(nterm(NTermType::Statement, children))
+}
+
+#[allow(dead_code)]
+pub fn parse_statement_expression(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let mut clone = tokens.clone();
+    let children = match clone.next() {
+        Some(tok) if tok.token_type == TokenType::Ident
+            || tok.token_type == TokenType::Key => match clone.next() {
+                Some(tok) if tok.token_type == TokenType::Ident =>
+                    vec![parse_local_variable_declaration_statement(tokens, src)?],
+                _ => vec![parse_expression(tokens, src)?],
+            }
+        _ => vec![parse_expression(tokens, src)?],
+    };
+    Ok(nterm(NTermType::StatementExpression, children))
 }
 
 #[cfg(test)]
@@ -201,13 +211,7 @@ mod tests {
 
     #[test]
     fn test_parse_block() {
-        let src = "{
-    Foo f = new Foo();
-    float f = 0.0;
-
-    String s0 = \"Hello, \", s1 = \"world!\";
-    String hello = s0 + s1;
-}";
+        let src = "{Foo f = new Foo(); float f = 0.0; String s0 = \"Hello, \", s1 = \"world!\"; String hello = s0 + s1;}";
         let node = parse_block(&mut lex(src, "").unwrap().iter(), src).unwrap();
         assert_eq!(node.children.len(), 3);
         assert_eq!(node.children[1].children.len(), 4);
