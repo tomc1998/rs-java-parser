@@ -347,11 +347,11 @@
 
 
 * TODO For loops
-** TODO ForControl:
+** DONE ForControl:
     ForVarControl
     ForInit ; [Expression] ; [ForUpdate]
 
-** TODO ForVarControl:
+** DONE ForVarControl:
     {VariableModifier} Type VariableDeclaratorId  ForVarControlRest
 
 ** TODO ForVarControlRest:
