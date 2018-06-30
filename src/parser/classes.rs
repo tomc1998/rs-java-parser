@@ -1,4 +1,6 @@
 use super::*;
+use super::statements::parse_block;
+use super::modifiers::{is_modifier_or_annot, parse_modifier};
 
 #[allow(dead_code)]
 pub fn parse_void_method_declarator_rest(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
@@ -41,8 +43,26 @@ pub fn parse_field_declarators_rest(_tokens: &mut TokenIter, _src: &str) -> Pars
 }
 
 #[allow(dead_code)]
-pub fn parse_class_body_declaration(_tokens: &mut TokenIter, _src: &str) -> ParseRes {
-    unimplemented!()
+pub fn parse_class_body_declaration(tokens: &mut TokenIter, src: &str) -> ParseRes {
+    let children = match tokens.clone().next() {
+        Some(tok) if tok.val(src) == "static" =>
+            vec![term(*tokens.next().unwrap()), // "static"
+                 parse_block(tokens, src)?],
+        Some(tok) if tok.val(src) == "{" => vec![parse_block(tokens, src)?],
+        Some(tok) if tok.val(src) == ";" => vec![term(*tokens.next().unwrap())],
+        _ => {
+            let mut children = Vec::new();
+            // Parse modifier list
+            while let Some(tok) = tokens.clone().next() {
+                if is_modifier_or_annot(tok.val(src)) {
+                    children.push(parse_modifier(tokens, src)?);
+                } else { break }
+            }
+            children.push(parse_member_decl(tokens, src)?);
+            children
+        }
+    };
+    Ok(nterm(NTermType::ClassBodyDeclaration, children))
 }
 
 #[allow(dead_code)]
@@ -67,6 +87,12 @@ mod tests {
     #[test]
     pub fn test_parse_class_body() {
         let src = "{
+            static {
+                for (int i = 0; i < 100; ++i) {
+                    System.out.println(i);
+                }
+            }
+
             public int foo;
             public ArrayList<String> bar = new ArrayList<>();
 
